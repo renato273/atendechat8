@@ -5,10 +5,12 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
-  makeInMemoryStore,
   isJidBroadcast,
   CacheStore
 } from "@whiskeysockets/baileys";
+
+// Importar makeInMemoryStore de forma alternativa
+const { makeInMemoryStore } = require("@whiskeysockets/baileys");
 import makeWALegacySocket from "@whiskeysockets/baileys";
 import P from "pino";
 
