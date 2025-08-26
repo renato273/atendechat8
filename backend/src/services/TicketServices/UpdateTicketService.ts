@@ -124,7 +124,9 @@ const UpdateTicketService = async ({
           const ratingTxt = ratingMessage || "";
           let bodyRatingMessage = `\u200e${ratingTxt}\n\n`;
           bodyRatingMessage +=
-            "Digite de 1 à 3 para qualificar nosso atendimento:\n*1* - _Insatisfeito_\n*2* - _Satisfeito_\n*3* - _Muito Satisfeito_\n\n";
+/*             "Digite de 1 à 3 para qualificar nosso atendimento:\n*1* - _Insatisfeito_\n*2* - _Satisfeito_\n*3* - _Muito Satisfeito_\n\n";
+ */
+            "Digite de 1  3 para Calificar la Gestión:\n*1* - _Insatisfecho_\n*2* - _Satisfecho_\n*3* - _Muy Satisfecho_\n\n";
           await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
 
           await ticketTraking.update({
