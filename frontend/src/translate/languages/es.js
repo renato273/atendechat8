@@ -691,6 +691,10 @@ const messages = {
           okEdit: "Guardar",
           cancel: "Cancelar",
         },
+        confirmationModal: {
+          deleteTitle: "Eliminar Programación",
+          deleteMessage: "¿Estás seguro de que deseas eliminar esta programación? Esta acción no se puede deshacer.",
+        },
         success: "Programación guardada con éxito.",
       },
       tagModal: {
