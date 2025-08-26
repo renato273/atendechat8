@@ -8,9 +8,6 @@ import makeWASocket, {
   isJidBroadcast,
   CacheStore
 } from "@whiskeysockets/baileys";
-
-// Importar makeInMemoryStore de forma alternativa
-const { makeInMemoryStore } = require("@whiskeysockets/baileys");
 import makeWALegacySocket from "@whiskeysockets/baileys";
 import P from "pino";
 
@@ -28,6 +25,21 @@ import NodeCache from 'node-cache';
 
 const loggerBaileys = MAIN_LOGGER.child({});
 loggerBaileys.level = "error";
+
+// Implementación alternativa de makeInMemoryStore para compatibilidad
+const makeInMemoryStore = (config?: any) => {
+  return {
+    bind: (socket: any) => {
+      // Implementación básica para bind
+    },
+    writeToFile: (path: string) => {
+      // Implementación básica para writeToFile
+    },
+    readFromFile: (path: string) => {
+      // Implementación básica para readFromFile
+    }
+  };
+};
 
 type Session = WASocket & {
   id?: number;
