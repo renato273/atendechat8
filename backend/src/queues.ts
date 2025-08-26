@@ -28,6 +28,8 @@ import FilesOptions from './models/FilesOptions';
 import { addSeconds, differenceInSeconds } from "date-fns";
 import formatBody from "./helpers/Mustache";
 import { ClosedAllOpenTickets } from "./services/WbotServices/wbotClosedTickets";
+import FindOrCreateTicketService from "./services/TicketServices/FindOrCreateTicketService";
+import CreateMessageService from "./services/MessageServices/CreateMessageService";
 
 
 const nodemailer = require('nodemailer');
@@ -271,11 +273,42 @@ async function handleSendScheduledMessage(job) {
       filePath = path.resolve("public", schedule.mediaPath);
     }
 
-    await SendMessage(whatsapp, {
+    const sentMessage = await SendMessage(whatsapp, {
       number: schedule.contact.number,
       body: formatBody(schedule.body, schedule.contact),
       mediaPath: filePath
     });
+
+    // Guardar el mensaje en el historial del chat
+    if (sentMessage) {
+      const contact = await Contact.findByPk(schedule.contactId);
+      if (contact) {
+        const ticket = await FindOrCreateTicketService(
+          contact,
+          whatsapp.id!,
+          0,
+          schedule.companyId
+        );
+
+        const messageData = {
+          id: sentMessage.key.id,
+          ticketId: ticket.id,
+          contactId: undefined, // fromMe = true
+          body: formatBody(schedule.body, schedule.contact),
+          fromMe: true,
+          mediaType: schedule.mediaPath ? "document" : "conversation",
+          read: true,
+          quotedMsgId: null,
+          ack: 1,
+          remoteJid: sentMessage.key.remoteJid,
+          participant: sentMessage.key.participant,
+          dataJson: JSON.stringify(sentMessage)
+        };
+
+        await CreateMessageService({ messageData, companyId: schedule.companyId });
+        await ticket.update({ lastMessage: formatBody(schedule.body, schedule.contact) });
+      }
+    }
 
     await scheduleRecord?.update({
       sentAt: moment().format("YYYY-MM-DD HH:mm"),
@@ -772,8 +805,9 @@ async function handleDispatchCampaign(job) {
 }
 
 async function handleLoginStatus(job) {
+  const offlineTimeoutMinutes = process.env.USER_OFFLINE_TIMEOUT_MINUTES || '5';
   const users: { id: number }[] = await sequelize.query(
-    `select id from "Users" where "updatedAt" < now() - '5 minutes'::interval and online = true`,
+    `select id from "Users" where "updatedAt" < now() - '${offlineTimeoutMinutes} minutes'::interval and online = true`,
     { type: QueryTypes.SELECT }
   );
   for (let item of users) {
