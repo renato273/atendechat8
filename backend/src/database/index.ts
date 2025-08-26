@@ -49,6 +49,38 @@ const dbConfig = require("../config/database");
 
 const sequelize = new Sequelize(dbConfig);
 
+// Función para verificar la conexión inicial
+sequelize.authenticate()
+  .then(() => {
+    console.log('✅ Conexión a PostgreSQL establecida correctamente');
+  })
+  .catch((error) => {
+    console.error('❌ Error al conectar con PostgreSQL:', error.message);
+  });
+
+// Manejo graceful de cierre de aplicación
+process.on('SIGINT', async () => {
+  console.log('🔄 Cerrando conexiones de base de datos...');
+  try {
+    await sequelize.close();
+    console.log('✅ Conexiones cerradas correctamente');
+  } catch (error) {
+    console.error('❌ Error al cerrar conexiones:', error);
+  }
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('🔄 Cerrando conexiones de base de datos...');
+  try {
+    await sequelize.close();
+    console.log('✅ Conexiones cerradas correctamente');
+  } catch (error) {
+    console.error('❌ Error al cerrar conexiones:', error);
+  }
+  process.exit(0);
+});
+
 const models = [
   Company,
   User,

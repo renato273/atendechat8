@@ -1,6 +1,5 @@
 import Redis from "ioredis";
 import { REDIS_URI_CONNECTION } from "../config/redis";
-import util from "util";
 import * as crypto from "crypto";
 
 const redis = new Redis(REDIS_URI_CONNECTION);
@@ -40,27 +39,35 @@ export function set(
   option?: string,
   optionValue?: string | number
 ) {
-  const setPromisefy = util.promisify(redis.set).bind(redis);
   if (option !== undefined && optionValue !== undefined) {
-    return setPromisefy(key, value, option, optionValue);
+    // Manejar opciones específicas de Redis
+    if (option.toLowerCase() === 'ex' && typeof optionValue === 'number') {
+      // EX: tiempo de expiración en segundos
+      return redis.set(key, value, 'EX', optionValue);
+    } else if (option.toLowerCase() === 'px' && typeof optionValue === 'number') {
+      // PX: tiempo de expiración en milisegundos
+      return redis.set(key, value, 'PX', optionValue);
+    } else {
+      // Para otras opciones, usar setex si es numérico
+      if (typeof optionValue === 'number') {
+        return redis.setex(key, optionValue, value);
+      }
+    }
   }
 
-  return setPromisefy(key, value);
+  return redis.set(key, value);
 }
 
 export function get(key: string) {
-  const getPromisefy = util.promisify(redis.get).bind(redis);
-  return getPromisefy(key);
+  return redis.get(key);
 }
 
 export function getKeys(pattern: string) {
-  const getKeysPromisefy = util.promisify(redis.keys).bind(redis);
-  return getKeysPromisefy(pattern);
+  return redis.keys(pattern);
 }
 
 export function del(key: string) {
-  const delPromisefy = util.promisify(redis.del).bind(redis);
-  return delPromisefy(key);
+  return redis.del(key);
 }
 
 export async function delFromPattern(pattern: string) {

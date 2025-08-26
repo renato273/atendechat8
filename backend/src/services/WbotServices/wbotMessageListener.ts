@@ -67,7 +67,7 @@ import { IConnections, INodes } from "../WebhookService/DispatchWebHookService";
 import { ActionsWebhookService } from "../WebhookService/ActionsWebhookService";
 import { WebhookModel } from "../../models/Webhook";
 
-import {differenceInMilliseconds} from "date-fns";
+import { differenceInMilliseconds } from "date-fns";
 import Whatsapp from "../../models/Whatsapp";
 
 const request = require("request");
@@ -108,7 +108,7 @@ const getTypeMessage = (msg: proto.IWebMessageInfo): string => {
 };
 
 function hasCaption(title: string, fileName: string) {
-  if(!title || !fileName) return false;
+  if (!title || !fileName) return false;
 
   const fileNameExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
@@ -471,13 +471,13 @@ const getContactMessage = async (msg: proto.IWebMessageInfo, wbot: Session) => {
   const rawNumber = msg.key.remoteJid.replace(/\D/g, "");
   return isGroup
     ? {
-        id: getSenderMessage(msg, wbot),
-        name: msg.pushName
-      }
+      id: getSenderMessage(msg, wbot),
+      name: msg.pushName
+    }
     : {
-        id: msg.key.remoteJid,
-        name: msg.key.fromMe ? rawNumber : msg.pushName
-      };
+      id: msg.key.remoteJid,
+      name: msg.key.fromMe ? rawNumber : msg.pushName
+    };
 };
 
 const downloadMedia = async (msg: proto.IWebMessageInfo) => {
@@ -669,7 +669,7 @@ const handleOpenAi = async (
 
   let { prompt } = await ShowWhatsAppService(wbot.id, ticket.companyId);
 
-  if( openAiSettings )
+  if (openAiSettings)
     prompt = openAiSettings;
 
   if (!prompt && !isNil(ticket?.queue?.prompt)) {
@@ -712,9 +712,8 @@ const handleOpenAi = async (
 
   const promptSystem = `Nas respostas utilize o nome ${sanitizeName(
     contact.name || "Amigo(a)"
-  )} para identificar o cliente.\nSua resposta deve usar no máximo ${
-    prompt.maxTokens
-  } tokens e cuide para não truncar o final.\nSempre que possível, mencione o nome dele para ser mais personalizado o atendimento e mais educado. Quando a resposta requer uma transferência para o setor de atendimento, comece sua resposta com 'Ação: Transferir para o setor de atendimento'.\n
+  )} para identificar o cliente.\nSua resposta deve usar no máximo ${prompt.maxTokens
+    } tokens e cuide para não truncar o final.\nSempre que possível, mencione o nome dele para ser mais personalizado o atendimento e mais educado. Quando a resposta requer uma transferência para o setor de atendimento, comece sua resposta com 'Ação: Transferir para o setor de atendimento'.\n
   ${prompt.prompt}\n`;
 
   let messagesOpenAi: ChatCompletionRequestMessage[] = [];
@@ -1563,8 +1562,7 @@ const handleChartbot = async (
       };
 
       const sendMsg = await wbot.sendMessage(
-        `${ticket.contact.number}@${
-          ticket.isGroup ? "g.us" : "s.whatsapp.net"
+        `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
         }`,
         buttonMessage
       );
@@ -1589,8 +1587,7 @@ const handleChartbot = async (
       };
 
       const sendMsg = await wbot.sendMessage(
-        `${ticket.contact.number}@${
-          ticket.isGroup ? "g.us" : "s.whatsapp.net"
+        `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
         }`,
         textMessage
       );
@@ -1658,8 +1655,7 @@ const handleChartbot = async (
         };
 
         const sendMsg = await wbot.sendMessage(
-          `${ticket.contact.number}@${
-            ticket.isGroup ? "g.us" : "s.whatsapp.net"
+          `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
           }`,
           listMessage
         );
@@ -1689,8 +1685,7 @@ const handleChartbot = async (
         };
 
         const sendMsg = await wbot.sendMessage(
-          `${ticket.contact.number}@${
-            ticket.isGroup ? "g.us" : "s.whatsapp.net"
+          `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
           }`,
           buttonMessage
         );
@@ -1714,8 +1709,7 @@ const handleChartbot = async (
         };
 
         const sendMsg = await wbot.sendMessage(
-          `${ticket.contact.number}@${
-            ticket.isGroup ? "g.us" : "s.whatsapp.net"
+          `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
           }`,
           textMessage
         );
@@ -2149,7 +2143,7 @@ export const handleMessageIntegration = async (
     console.log("entrou no typebot");
     // await typebots(ticket, msg, wbot, queueIntegration);
     await typebotListener({ ticket, msg, wbot, typebot: queueIntegration });
-  } else if(queueIntegration.type === "flowbuilder") {
+  } else if (queueIntegration.type === "flowbuilder") {
     if (!isMenu) {
 
       await flowbuilderIntegration(
@@ -2327,7 +2321,7 @@ const handleMessage = async (
       unreadMessages === 0 &&
       whatsapp.complationMessage &&
       formatBody(whatsapp.complationMessage, contact).trim().toLowerCase() ===
-        lastMessage?.body.trim().toLowerCase()
+      lastMessage?.body.trim().toLowerCase()
     ) {
       return;
     }
@@ -2412,8 +2406,7 @@ const handleMessage = async (
           const debouncedSentMessage = debounce(
             async () => {
               await wbot.sendMessage(
-                `${ticket.contact.number}@${
-                  ticket.isGroup ? "g.us" : "s.whatsapp.net"
+                `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
                 }`,
                 {
                   text: body
@@ -2463,8 +2456,7 @@ const handleMessage = async (
               const debouncedSentMessage = debounce(
                 async () => {
                   await wbot.sendMessage(
-                    `${ticket.contact.number}@${
-                      ticket.isGroup ? "g.us" : "s.whatsapp.net"
+                    `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
                     }`,
                     {
                       text: body
@@ -2790,8 +2782,7 @@ const handleMessage = async (
             const debouncedSentMessage = debounce(
               async () => {
                 await wbot.sendMessage(
-                  `${ticket.contact.number}@${
-                    ticket.isGroup ? "g.us" : "s.whatsapp.net"
+                  `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
                   }`,
                   {
                     text: body
@@ -2833,8 +2824,7 @@ const handleMessage = async (
         const debouncedSentMessage = debounce(
           async () => {
             await wbot.sendMessage(
-              `${ticket.contact.number}@${
-                ticket.isGroup ? "g.us" : "s.whatsapp.net"
+              `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
               }`,
               {
                 text: whatsapp.greetingMessage
@@ -2913,6 +2903,13 @@ const verifyCampaignMessageAndCloseTicket = async (
     const messageRecord = await Message.findOne({
       where: { id: message.key.id!, companyId }
     });
+
+    // Verificar que messageRecord existe antes de continuar
+    if (!messageRecord) {
+      console.log(`Message record not found for campaign message: ${message.key.id}`);
+      return;
+    }
+
     const ticket = await Ticket.findByPk(messageRecord.ticketId);
     await ticket.update({ status: "closed" });
 

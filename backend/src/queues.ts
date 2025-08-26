@@ -300,20 +300,42 @@ async function handleVerifyCampaigns(job) {
    * Implementar filtro de campanhas
    */
 
-  logger.info("[🏁] - Verificando campañas...");
+  logger.info("[INIT] - Verificando campañas...");
+
+  // Debug: Mostrar hora actual y rango de búsqueda
+  const now = moment();
+  const oneHourLater = moment().add(1, 'hour');
+  logger.info(`[TIME] - Hora actual: ${now.format('YYYY-MM-DD HH:mm:ss')}`);
+  logger.info(`[TIME] - Buscando campañas entre: ${now.format('YYYY-MM-DD HH:mm:ss')} y ${oneHourLater.format('YYYY-MM-DD HH:mm:ss')}`);
+
+  // Debug: Primero verificar todas las campañas sin filtro de tiempo
+  const allCampaigns: { id: number; scheduledAt: string; name?: string; status: string }[] =
+    await sequelize.query(
+      `select id, name, "scheduledAt", status from "Campaigns" c order by "scheduledAt" desc limit 10`,
+      { type: QueryTypes.SELECT }
+    );
+
+  logger.info(`[DATA] - Total de campañas en BD (últimas 10): ${allCampaigns.length}`);
+  allCampaigns.forEach(c => {
+    logger.info(`[INFO] - Campaña: "${c.name || 'Sin nombre'}" (ID: ${c.id}) - Status: ${c.status} - Programada: ${c.scheduledAt}`);
+  });
 
   const campaigns: { id: number; scheduledAt: string; name?: string }[] =
     await sequelize.query(
       `select id, name, "scheduledAt" from "Campaigns" c
-    where "scheduledAt" between now() and now() + '1 hour'::interval and status = 'PROGRAMADA'`,
+    where "scheduledAt" between now() - '5 minutes'::interval and now() + '1 hour'::interval and status = 'PROGRAMADA'`,
       { type: QueryTypes.SELECT }
     );
 
+  logger.info(`[SEARCH] - Campañas encontradas con filtros: ${campaigns.length}`);
+
   if (campaigns.length > 0) {
-    logger.info(`[🚩] - Campañas encontradas: ${campaigns.length}`);
+    logger.info(`[FOUND] - Campañas encontradas: ${campaigns.length}`);
     // Logger para mostrar nombres de campañas activas
     const campaignNames = campaigns.map(c => `"${c.name || 'Sin nombre'}" (ID: ${c.id})`).join(', ');
-    logger.info(`[📋] - Campañas activas para envío: ${campaignNames}`);
+    logger.info(`[LIST] - Campañas activas para envío: ${campaignNames}`);
+  } else {
+    logger.info(`[WARN] - No se encontraron campañas programadas para la próxima hora`);
   }
 
   for (let campaign of campaigns) {
@@ -336,10 +358,11 @@ async function handleVerifyCampaigns(job) {
       );
     } catch (err: any) {
       Sentry.captureException(err);
+      logger.error(`[❌] - Error procesando campaña ${campaign.id}:`, err.message);
     }
   }
 
-  logger.info("[🏁] - Finalizando verificación de campañas programadas...");
+  logger.info("[END] - Finalizando verificación de campañas programadas...");
 }
 
 async function getCampaign(id) {
@@ -697,7 +720,7 @@ async function handleDispatchCampaign(job) {
           const options = await getMessageOptions(file.path, path.resolve(folder, file.path), file.name);
           await wbot.sendMessage(chatId, { ...options });
 
-          logger.info("[🚩] - Archivo enviado: "+ file.name +" | CampaignShippingId: " + campaignShippingId + " CampañaID: " + campaignId);
+          logger.info("[🚩] - Archivo enviado: " + file.name + " | CampaignShippingId: " + campaignShippingId + " CampañaID: " + campaignId);
         };
       } catch (error) {
         logger.info(error);
@@ -706,7 +729,7 @@ async function handleDispatchCampaign(job) {
 
     if (campaign.mediaPath) {
 
-      logger.info("[🚩] - Preparando media de la campaña: "+ campaign.mediaPath +" | CampaignShippingId: " + campaignShippingId + " CampañaID: " + campaignId);
+      logger.info("[🚩] - Preparando media de la campaña: " + campaign.mediaPath + " | CampaignShippingId: " + campaignShippingId + " CampañaID: " + campaignId);
 
       const publicFolder = path.resolve(__dirname, "..", "public");
       const filePath = path.join(publicFolder, campaign.mediaPath);
@@ -846,7 +869,7 @@ handleInvoiceCreate()
 
 export async function startQueueProcess() {
 
-  logger.info("[🏁] - Iniciando procesamiento de colas");
+  logger.info("[INIT] - Iniciando procesamiento de colas");
 
   messageQueue.process("SendMessage", handleSendMessage);
 
@@ -899,7 +922,7 @@ export async function startQueueProcess() {
   }, 5 * 60 * 1000);
 
   campaignQueue.on('completed', (job) => {
-    logger.info(`[📌] - Campaña ${job.id} completada en ${Date.now() - job.timestamp}ms`);
+    logger.info(`[DONE] - Campaña ${job.id} completada en ${Date.now() - job.timestamp}ms`);
   });
 
   scheduleMonitor.add(

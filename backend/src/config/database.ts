@@ -5,26 +5,26 @@ module.exports = {
     charset: "utf8mb4",
     collate: "utf8mb4_bin",
   },
-  dialect: process.env.DB_DIALECT || "mysql",
+  dialect: process.env.DB_DIALECT || "postgres",
   timezone: "-03:00",
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
+  port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME,
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
-  logging: process.env.DB_DEBUG === "true" 
-    ? (msg) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`) 
+  logging: process.env.DB_DEBUG === "true"
+    ? (msg: string) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`)
     : false,
   pool: {
-    max: 20,
-    min: 1,
-    acquire: 0,
-    idle: 30000,
-    evict: 1000 * 60 * 5,
+    max: 10,
+    min: 2,
+    acquire: 60000,
+    idle: 10000,
+    evict: 1000 * 60 * 2,
   },
   retry: {
-    max: 3,
-    timeout: 30000,
+    max: 5,
+    timeout: 60000,
     match: [
       /Deadlock/i,
       /SequelizeConnectionError/,
@@ -34,8 +34,17 @@ module.exports = {
       /SequelizeHostNotReachableError/,
       /SequelizeInvalidConnectionError/,
       /SequelizeConnectionAcquireTimeoutError/,
+      /Connection terminated unexpectedly/,
       /Operation timeout/,
-      /ETIMEDOUT/
+      /ETIMEDOUT/,
+      /ECONNRESET/,
+      /ENOTFOUND/
     ]
+  },
+  dialectOptions: {
+    connectTimeout: 60000,
+    socketTimeout: 60000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 0,
   },
 };
