@@ -8,9 +8,12 @@ import ConfirmationModal from "../ConfirmationModal";
 import { Menu } from "@material-ui/core";
 import { ReplyMessageContext } from "../../context/ReplyingMessage/ReplyingMessageContext";
 import toastError from "../../errors/toastError";
+import { AuthContext } from "../../context/Auth/AuthContext";
+import { Can } from "../Can";
 
 const MessageOptionsMenu = ({ message, menuOpen, handleClose, anchorEl }) => {
 	const { setReplyingMessage } = useContext(ReplyMessageContext);
+	const { user } = useContext(AuthContext);
 	const [confirmationOpen, setConfirmationOpen] = useState(false);
 
 	const handleDeleteMessage = async () => {
@@ -56,9 +59,15 @@ const MessageOptionsMenu = ({ message, menuOpen, handleClose, anchorEl }) => {
 				onClose={handleClose}
 			>
 				{message.fromMe && (
-					<MenuItem onClick={handleOpenConfirmationModal}>
-						{i18n.t("messageOptionsMenu.delete")}
-					</MenuItem>
+					<Can
+						role={user.profile}
+						perform="messages:deleteMessage"
+						yes={() => (
+							<MenuItem onClick={handleOpenConfirmationModal}>
+								{i18n.t("messageOptionsMenu.delete")}
+							</MenuItem>
+						)}
+					/>
 				)}
 				<MenuItem onClick={hanldeReplyMessage}>
 					{i18n.t("messageOptionsMenu.reply")}

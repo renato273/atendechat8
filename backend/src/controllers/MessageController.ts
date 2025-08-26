@@ -87,6 +87,10 @@ export const remove = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
+  if (req.user.profile !== "admin") {
+    throw new AppError("ERR_NO_PERMISSION", 403);
+  }
+
   const { messageId } = req.params;
   const { companyId } = req.user;
 

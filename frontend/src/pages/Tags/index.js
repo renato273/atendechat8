@@ -37,6 +37,7 @@ import { Chip } from "@material-ui/core";
 import { Tooltip } from "@material-ui/core";
 import { SocketContext } from "../../context/Socket/SocketContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { Can } from "../../components/Can";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_TAGS") {
@@ -232,13 +233,19 @@ return (
               ),
             }}
           />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleOpenTagModal}
-          >
-            {i18n.t("tags.buttons.add")}
-          </Button>		  
+          <Can
+            role={user.profile}
+            perform="tags-page:createTag"
+            yes={() => (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleOpenTagModal}
+              >
+                {i18n.t("tags.buttons.add")}
+              </Button>
+            )}
+          />		  
         </MainHeaderButtonsWrapper>
       </MainHeader>
       <Paper
@@ -276,19 +283,31 @@ return (
                   </TableCell>
                   <TableCell align="center">{tag.ticketsCount}</TableCell>
                   <TableCell align="center">
-                    <IconButton size="small" onClick={() => handleEditTag(tag)}>
-                      <EditIcon />
-                    </IconButton>
+                    <Can
+                      role={user.profile}
+                      perform="tags-page:editTag"
+                      yes={() => (
+                        <IconButton size="small" onClick={() => handleEditTag(tag)}>
+                          <EditIcon />
+                        </IconButton>
+                      )}
+                    />
 
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        setConfirmModalOpen(true);
-                        setDeletingTag(tag);
-                      }}
-                    >
-                      <DeleteOutlineIcon />
-                    </IconButton>
+                    <Can
+                      role={user.profile}
+                      perform="tags-page:deleteTag"
+                      yes={() => (
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            setConfirmModalOpen(true);
+                            setDeletingTag(tag);
+                          }}
+                        >
+                          <DeleteOutlineIcon />
+                        </IconButton>
+                      )}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

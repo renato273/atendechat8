@@ -32,6 +32,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
+  if (req.user.profile !== "admin") {
+    throw new AppError("ERR_NO_PERMISSION", 403);
+  }
+
   const { name, color, kanban } = req.body;
   const { companyId } = req.user;
 
@@ -56,7 +60,7 @@ export const kanban = async (req: Request, res: Response): Promise<Response> => 
 
   const tags = await KanbanListService({ companyId });
 
-  return res.json({lista:tags});
+  return res.json({ lista: tags });
 };
 
 export const show = async (req: Request, res: Response): Promise<Response> => {
@@ -93,6 +97,10 @@ export const remove = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
+  if (req.user.profile !== "admin") {
+    throw new AppError("ERR_NO_PERMISSION", 403);
+  }
+
   const { tagId } = req.params;
 
   await DeleteService(tagId);

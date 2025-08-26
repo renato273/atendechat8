@@ -14,7 +14,11 @@ const rules = {
 			"contacts-page:deleteContact",
 			"connections-page:actionButtons",
 			"connections-page:addConnection",
-			"connections-page:editOrDeleteConnection"
+			"connections-page:editOrDeleteConnection",
+			"tags-page:createTag",
+			"tags-page:editTag",
+			"tags-page:deleteTag",
+			"messages:deleteMessage"
 		],
 	},
 };
