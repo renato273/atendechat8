@@ -7,6 +7,7 @@ import Message from "../models/Message";
 import Queue from "../models/Queue";
 import User from "../models/User";
 import Whatsapp from "../models/Whatsapp";
+import Ticket from "../models/Ticket";
 import formatBody from "../helpers/Mustache";
 
 import ListMessagesService from "../services/MessageServices/ListMessagesService";
@@ -103,6 +104,114 @@ export const remove = async (
   });
 
   return res.send();
+};
+
+// 🔥 NUEVO ENDPOINT: Marcar chat como abierto y actualizar mensajes
+export const markAsOpened = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { ticketId } = req.params;
+  const { companyId } = req.user;
+
+  try {
+    const ticket = await ShowTicketService(ticketId, companyId);
+    
+    if (!ticket) {
+      throw new AppError("ERR_NO_TICKET_FOUND", 404);
+    }
+
+    // Llamar a SetTicketMessagesAsRead que ahora incluye la actualización de mensajes enviados
+    SetTicketMessagesAsRead(ticket);
+
+    // También actualizar directamente los mensajes enviados como leídos
+    await updateSentMessagesAsOpened(ticket);
+
+    return res.json({ success: true });
+  } catch (err) {
+    throw new AppError("ERR_UPDATING_MESSAGES", 500);
+  }
+};
+
+// 🔥 NUEVO ENDPOINT: Heartbeat para indicar que el usuario está viendo el chat activamente
+export const heartbeat = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { ticketId } = req.params;
+  const { companyId } = req.user;
+
+  try {
+    const ticket = await ShowTicketService(ticketId, companyId);
+    
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Actualizar mensajes enviados como leídos si el usuario está viendo activamente
+    await updateSentMessagesAsOpened(ticket);
+
+    return res.json({ success: true });
+  } catch (err) {
+    // Error silencioso para heartbeat
+    return res.status(200).json({ success: false });
+  }
+};
+
+// 🔥 FUNCIÓN AUXILIAR: Actualizar mensajes enviados cuando se abre el chat
+const updateSentMessagesAsOpened = async (ticket: Ticket): Promise<void> => {
+  try {
+    const io = getIO();
+
+    // Buscar mensajes enviados que no están marcados como leídos
+    const sentMessages = await Message.findAll({
+      where: {
+        ticketId: ticket.id,
+        fromMe: true,
+        ack: [1, 2] // Enviados o entregados, pero no leídos
+      }
+    });
+
+    if (sentMessages.length > 0) {
+      // Actualizar como leídos (ack = 3)
+      await Message.update(
+        { ack: 3 },
+        {
+          where: {
+            ticketId: ticket.id,
+            fromMe: true,
+            ack: [1, 2]
+          }
+        }
+      );
+
+      // Emitir eventos para cada mensaje actualizado
+      for (const message of sentMessages) {
+        const updatedMessage = await Message.findByPk(message.id, {
+          include: [
+            "contact",
+            {
+              model: Message,
+              as: "quotedMsg",
+              include: ["contact"]
+            }
+          ]
+        });
+
+        if (updatedMessage) {
+          io.to(ticket.id.toString()).emit(
+            `company-${ticket.companyId}-appMessage`,
+            {
+              action: "update",
+              message: updatedMessage
+            }
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error actualizando mensajes como abiertos:", err);
+  }
 };
 
 export const send = async (req: Request, res: Response): Promise<Response> => {

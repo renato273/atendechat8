@@ -335,6 +335,23 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     setPageNumber(1);
 
     currentTicketId.current = ticketId;
+
+    // 🔥 NUEVA FUNCIONALIDAD: Notificar al backend que el chat fue abierto
+    // Esto activará la actualización de mensajes como leídos
+    if (ticketId) {
+      const notifyTicketOpened = async () => {
+        try {
+          await api.post(`/messages/${ticketId}/mark-as-opened`);
+        } catch (err) {
+          // Error silencioso, no afecta la funcionalidad principal
+          console.debug("Error notificando apertura de chat:", err);
+        }
+      };
+      
+      // Delay pequeño para asegurar que el componente esté montado
+      const timeoutId = setTimeout(notifyTicketOpened, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [ticketId]);
 
   useEffect(() => {
@@ -385,8 +402,24 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
       }
     });
 
+    // 🔥 NUEVA FUNCIONALIDAD: Heartbeat para indicar que el chat está activo
+    let heartbeatInterval;
+    if (ticketId) {
+      heartbeatInterval = setInterval(() => {
+        // Solo enviar heartbeat si el documento está visible (usuario activo)
+        if (!document.hidden) {
+          api.post(`/messages/${ticketId}/heartbeat`).catch(() => {
+            // Error silencioso
+          });
+        }
+      }, 10000); // Cada 10 segundos
+    }
+
     return () => {
       socket.disconnect();
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
     };
   }, [ticketId, ticket, socketManager]);
 

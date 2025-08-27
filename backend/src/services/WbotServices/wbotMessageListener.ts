@@ -2981,12 +2981,111 @@ const wbotMessageListener = async (
       });
     });
 
+    // 🔥 NUEVO: Listener para detectar actividad de presencia (typing, online, etc.)
+    wbot.ev.on("presence.update", async (presenceUpdate) => {
+      try {
+        const { id: contactJid, presences } = presenceUpdate;
+        const contactNumber = contactJid.replace(/[@s.whatsapp.net|@g.us]/g, "");
+
+        // Buscar si hay un ticket activo para este contacto
+        const contact = await Contact.findOne({
+          where: { number: contactNumber }
+        });
+
+        if (contact) {
+          const ticket = await Ticket.findOne({
+            where: {
+              contactId: contact.id,
+              status: "open",
+              companyId: companyId
+            }
+          });
+
+          if (ticket) {
+            // Si el contacto está activo (composing, available), actualizar mensajes como leídos
+            const isActive = Object.values(presences).some(presence =>
+              presence.lastKnownPresence === 'composing' ||
+              presence.lastKnownPresence === 'available'
+            );
+
+            if (isActive) {
+              logger.info(`Contacto ${contactNumber} está activo, actualizando mensajes como leídos`);
+              await updateSentMessagesAsReadByPresence(ticket);
+            }
+          }
+        }
+      } catch (err) {
+        logger.error(`Error handling presence update: ${err}`);
+      }
+    });
+
     // wbot.ev.on("messages.set", async (messageSet: IMessage) => {
     //   messageSet.messages.filter(filterMessages).map(msg => msg);
     // });
   } catch (error) {
     Sentry.captureException(error);
     logger.error(`Error handling wbot message listener. Err: ${error}`);
+  }
+};
+
+// 🔥 NUEVA FUNCIÓN: Actualizar mensajes como leídos cuando detectamos presencia activa
+const updateSentMessagesAsReadByPresence = async (ticket: Ticket): Promise<void> => {
+  try {
+    const io = getIO();
+
+    // Buscar mensajes enviados que están en estado "entregado" (ack = 2) pero no leídos
+    const sentMessages = await Message.findAll({
+      where: {
+        ticketId: ticket.id,
+        fromMe: true,
+        ack: 2 // Solo mensajes entregados pero no leídos
+      },
+      order: [["createdAt", "ASC"]]
+    });
+
+    if (sentMessages.length > 0) {
+      logger.info(`🔥 Actualizando ${sentMessages.length} mensajes por presencia activa en ticket ${ticket.id}`);
+
+      // Actualizar mensajes como leídos (ack = 3)
+      await Message.update(
+        { ack: 3 },
+        {
+          where: {
+            ticketId: ticket.id,
+            fromMe: true,
+            ack: 2
+          }
+        }
+      );
+
+      // Emitir eventos en tiempo real
+      for (const message of sentMessages) {
+        const updatedMessage = await Message.findByPk(message.id, {
+          include: [
+            "contact",
+            {
+              model: Message,
+              as: "quotedMsg",
+              include: ["contact"]
+            }
+          ]
+        });
+
+        if (updatedMessage) {
+          io.to(ticket.id.toString()).emit(
+            `company-${ticket.companyId}-appMessage`,
+            {
+              action: "update",
+              message: updatedMessage
+            }
+          );
+        }
+      }
+
+      logger.info(`✅ Mensajes actualizados por presencia activa para ticket ${ticket.id}`);
+    }
+  } catch (err) {
+    logger.error(`Error actualizando mensajes por presencia: ${err}`);
   }
 };
 

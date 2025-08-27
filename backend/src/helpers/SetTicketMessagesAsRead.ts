@@ -46,6 +46,9 @@ const SetTicketMessagesAsRead = async (ticket: Ticket): Promise<void> => {
         }
       }
     );
+
+    // 🔥 NUEVA FUNCIONALIDAD: Actualizar mensajes enviados como leídos
+    await updateSentMessagesAsRead(ticket);
   } catch (err) {
     logger.warn(
       `Could not mark messages as read. Maybe whatsapp session disconnected? Err: ${err}`
@@ -57,6 +60,67 @@ const SetTicketMessagesAsRead = async (ticket: Ticket): Promise<void> => {
     action: "updateUnread",
     ticketId: ticket.id
   });
+};
+
+// 🔥 NUEVA FUNCIÓN: Actualizar mensajes enviados como leídos cuando el receptor abre el chat
+const updateSentMessagesAsRead = async (ticket: Ticket): Promise<void> => {
+  try {
+    const io = getIO();
+
+    // Buscar mensajes enviados por nosotros que aún no están marcados como leídos (ack < 3)
+    const sentMessages = await Message.findAll({
+      where: {
+        ticketId: ticket.id,
+        fromMe: true,
+        ack: [1, 2] // Solo mensajes enviados (1) o entregados (2), no leídos (3+)
+      },
+      order: [["createdAt", "ASC"]]
+    });
+
+    if (sentMessages.length > 0) {
+      logger.info(`Actualizando ${sentMessages.length} mensajes enviados como leídos para ticket ${ticket.id}`);
+
+      // Actualizar todos los mensajes enviados como leídos (ack = 3)
+      await Message.update(
+        { ack: 3 },
+        {
+          where: {
+            ticketId: ticket.id,
+            fromMe: true,
+            ack: [1, 2]
+          }
+        }
+      );
+
+      // Emitir eventos en tiempo real para cada mensaje actualizado
+      for (const message of sentMessages) {
+        const updatedMessage = await Message.findByPk(message.id, {
+          include: [
+            "contact",
+            {
+              model: Message,
+              as: "quotedMsg",
+              include: ["contact"]
+            }
+          ]
+        });
+
+        if (updatedMessage) {
+          io.to(ticket.id.toString()).emit(
+            `company-${ticket.companyId}-appMessage`,
+            {
+              action: "update",
+              message: updatedMessage
+            }
+          );
+        }
+      }
+
+      logger.info(`✅ Mensajes enviados actualizados como leídos para ticket ${ticket.id}`);
+    }
+  } catch (err) {
+    logger.error(`Error actualizando mensajes enviados como leídos: ${err}`);
+  }
 };
 
 export default SetTicketMessagesAsRead;
