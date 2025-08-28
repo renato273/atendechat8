@@ -87,11 +87,19 @@ export default function Options(props) {
   const [chatbotType, setChatbotType] = useState("");
   const [CheckMsgIsGroup, setCheckMsgIsGroupType] = useState("enabled");
 
+  // 🔥 NUEVAS OPCIONES: Creación de usuarios y restricción de audio
+  const [userCreation, setUserCreation] = useState("enabled");
+  const [userAudioRestriction, setUserAudioRestriction] = useState("enabled");
+
   const [loadingUserRating, setLoadingUserRating] = useState(false);
   const [loadingScheduleType, setLoadingScheduleType] = useState(false);
   const [loadingCallType, setLoadingCallType] = useState(false);
   const [loadingChatbotType, setLoadingChatbotType] = useState(false);
-  const [loadingCheckMsgIsGroup, setCheckMsgIsGroup] = useState(false);
+  const [loadingCheckMsgIsGroup, setLoadingCheckMsgIsGroup] = useState(false);
+
+  // 🔥 NUEVOS LOADINGS: Para las nuevas opciones
+  const [loadingUserCreation, setLoadingUserCreation] = useState(false);
+  const [loadingUserAudioRestriction, setLoadingUserAudioRestriction] = useState(false);
 
 
   //const [ipixcType, setIpIxcType] = useState("");
@@ -165,6 +173,17 @@ export default function Options(props) {
         setChatbotType(chatbotType.value);
       }
 
+      // 🔥 NUEVAS OPCIONES: Cargar configuración de creación de usuarios y audio
+      const userCreationSetting = settings.find((s) => s.key === "userCreation");
+      if (userCreationSetting) {
+        setUserCreation(userCreationSetting.value);
+      }
+
+      const userAudioRestrictionSetting = settings.find((s) => s.key === "userAudioRestriction");
+      if (userAudioRestrictionSetting) {
+        setUserAudioRestriction(userAudioRestrictionSetting.value);
+      }
+
 	    {/*const ipixcType = settings.find((s) => s.key === "ipixc");
       if (ipixcType) {
         setIpIxcType(ipixcType.value);
@@ -177,7 +196,7 @@ export default function Options(props) {
 
       {/*const ipmkauthType = settings.find((s) => s.key === "ipmkauth");
       if (ipmkauthType) {
-        setIpMkauthType(ipmkauthType.value);
+        setIpMkauthType(ipixcType.value);
       }*/}
 
      {/* const clientidmkauthType = settings.find((s) => s.key === "clientidmkauth");
@@ -267,13 +286,13 @@ export default function Options(props) {
 
   async function handleGroupType(value) {
     setCheckMsgIsGroupType(value);
-    setCheckMsgIsGroup(true);
+    setLoadingCheckMsgIsGroup(true);
     await update({
       key: "CheckMsgIsGroup",
       value,
     });
     toast.success(i18n.t("settings.options.toasts.success"));
-    setCheckMsgIsGroupType(false);
+    setLoadingCheckMsgIsGroup(false);
     /*     if (typeof scheduleTypeChanged === "function") {
           scheduleTypeChanged(value);
         } */
@@ -371,6 +390,39 @@ export default function Options(props) {
     toast.success(i18n.t("settings.options.toasts.success"));
     setLoadingAsaasType(false);
   }
+
+  // 🔥 NUEVAS FUNCIONES: Manejar cambios de creación de usuarios y restricción de audio
+  async function handleUserCreation(value) {
+    setUserCreation(value);
+    setLoadingUserCreation(true);
+    try {
+      await update({
+        key: "userCreation",
+        value,
+      });
+      toast.success(i18n.t("settings.options.toasts.success"));
+    } catch (error) {
+      toast.error("Error al actualizar la configuración de creación de usuarios");
+    } finally {
+      setLoadingUserCreation(false);
+    }
+  }
+
+  async function handleUserAudioRestriction(value) {
+    setUserAudioRestriction(value);
+    setLoadingUserAudioRestriction(true);
+    try {
+      await update({
+        key: "userAudioRestriction",
+        value,
+      });
+      toast.success(i18n.t("settings.options.toasts.success"));
+    } catch (error) {
+      toast.error("Error al actualizar la configuración de audio");
+    } finally {
+      setLoadingUserAudioRestriction(false);
+    }
+  }
   return (
     <>
       <Grid spacing={3} container>
@@ -432,7 +484,7 @@ export default function Options(props) {
               <MenuItem value={"enabled"}>{i18n.t("settings.options.fields.active")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && i18n.t("settings.options.updating")}
+              {loadingCheckMsgIsGroup && i18n.t("settings.options.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -540,6 +592,50 @@ export default function Options(props) {
             </Select>
             <FormHelperText>
               {loadingSendGreetingMessageOneQueues && i18n.t("settings.options.updating")}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+
+        {/* 🔥 NUEVA OPCIÓN: Creación de Usuarios */}
+        <Grid xs={12} sm={6} md={4} item>
+          <FormControl className={classes.selectContainer}>
+            <InputLabel id="userCreation-label">
+              Creación de Usuarios
+            </InputLabel>
+            <Select
+              labelId="userCreation-label"
+              value={userCreation}
+              onChange={async (e) => {
+                handleUserCreation(e.target.value);
+              }}
+            >
+              <MenuItem value={"enabled"}>Habilitado</MenuItem>
+              <MenuItem value={"disabled"}>Deshabilitado</MenuItem>
+            </Select>
+            <FormHelperText>
+              {loadingUserCreation && i18n.t("settings.options.updating")}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+
+        {/* 🔥 NUEVA OPCIÓN: Restricción de Audio para Usuarios */}
+        <Grid xs={12} sm={6} md={4} item>
+          <FormControl className={classes.selectContainer}>
+            <InputLabel id="userAudioRestriction-label">
+              Envío de Audio por Usuarios
+            </InputLabel>
+            <Select
+              labelId="userAudioRestriction-label"
+              value={userAudioRestriction}
+              onChange={async (e) => {
+                handleUserAudioRestriction(e.target.value);
+              }}
+            >
+              <MenuItem value={"enabled"}>Permitido</MenuItem>
+              <MenuItem value={"disabled"}>Restringido</MenuItem>
+            </Select>
+            <FormHelperText>
+              {loadingUserAudioRestriction && i18n.t("settings.options.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>

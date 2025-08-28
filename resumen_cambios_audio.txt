@@ -1,0 +1,39 @@
+# RESUMEN DE CAMBIOS - RESTRICCIÓN DE ENVÍO DE AUDIO POR USUARIOS
+
+## OBJETIVO
+Implementar funcionalidad para que los administradores puedan restringir el envío de mensajes de audio por parte de usuarios regulares.
+
+## FUNCIONALIDAD IMPLEMENTADA
+### BACKEND
+1. **backend/src/database/seeds/20200904070007-create-default-settings.ts**
+   - Agregado setting "userAudioRestriction" con valor por defecto "enabled"
+   - Agregado setting "userCreation" con valor por defecto "enabled"
+
+### 1. CONFIGURACIÓN EN SETTINGS
+- Se agregó una nueva opción en el panel de configuraciones (Settings/Options)
+- Nombre: "Envío de Audio por Usuarios"
+- Opciones: 
+  - "Permitido" (enabled) - Los usuarios pueden enviar audio
+  - "Restringido" (disabled) - Los usuarios NO pueden enviar audio
+- Los administradores siempre pueden enviar audio independientemente de la configuración
+
+
+## FALTA IMPLEMENTAR
+
+### 2. VALIDACIÓN VISUAL EN EL FRONTEND
+- El icono del micrófono cambia de color según el estado:
+  - VERDE (#4caf50): Cuando está permitido enviar audio
+  - ROJO (#f44336): Cuando está restringido enviar audio
+- Tooltip informativo que indica el estado actual
+
+### 3. VALIDACIÓN FUNCIONAL
+- Antes de iniciar la grabación, se verifica el permiso
+- Si no está permitido, se muestra un toast de error: "No tienes permisos para enviar mensajes de audio. Contacta al administrador."
+- La grabación no se inicia si no hay permisos
+
+### 4. VALIDACIÓN EN EL BACKEND
+- Validación adicional en el servidor antes de procesar archivos de audio
+- Error controlado que evita el deslogueo del usuario
+
+## ARCHIVOS MODIFICADOS
+
