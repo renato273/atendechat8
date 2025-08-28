@@ -384,7 +384,8 @@ const messages = {
           expiresInactiveMessage: "Mensaje de cierre por inactividad",
           greetingMessage: "Mensaje de bienvenida",
           complationMessage: "Mensaje de conclusión",
-          integration: "Integración"
+          integration: "Integración",
+          audioPermission: "Permiso de audio"
         },
         buttons: {
           okAdd: "Agregar",
@@ -1505,6 +1506,12 @@ const messages = {
         placeholderOpen: "Escribe un mensaje",
         placeholderClosed: "Reabre o acepta este ticket para enviar un mensaje.",
         signMessage: "Firmar",
+        audio: {
+          notAllowed: "No tienes permisos para enviar audio",
+          allowedByConnection: "Audio habilitado por conexión",
+          allowedGlobal: "Audio habilitado (global)",
+          blocked: "Audio restringido",
+        },
       },
       contactDrawer: {
         header: "Datos del contacto",

@@ -100,7 +100,10 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
           
           const { data } = await api.get(`whatsapp/${whatsAppId}?session=0`);
 
-          setWhatsApp(data);
+          setWhatsApp({
+            ...data,
+            audioPermission: data.audioPermission || "inherit"
+          });
           setSelectedPrompt( data.promptId );
           setSelectedIntegration(data.integrationId)
 
@@ -241,6 +244,21 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
                     </Grid>
                   </Grid>
                 </div>
+                <FormControl margin="dense" variant="outlined" fullWidth>
+                  <InputLabel>
+                    {i18n.t("whatsappModal.form.audioPermission") || "Permiso de audio"}
+                  </InputLabel>
+                  <Field
+                    as={Select}
+                    label={i18n.t("whatsappModal.form.audioPermission") || "Permiso de audio"}
+                    name="audioPermission"
+                    value={values.audioPermission || "inherit"}
+                  >
+                    <MenuItem value="inherit">Heredar (global)</MenuItem>
+                    <MenuItem value="enabled">Habilitado</MenuItem>
+                    <MenuItem value="disabled">Restringido</MenuItem>
+                  </Field>
+                </FormControl>
                 <div>
                   <Field
                     as={TextField}

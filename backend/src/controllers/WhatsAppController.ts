@@ -20,6 +20,7 @@ interface WhatsappData {
   status?: string;
   isDefault?: boolean;
   token?: string;
+  audioPermission?: string; // 'inherit' | 'enabled' | 'disabled'
   //sendIdQueue?: number;
   //timeSendQueue?: number;
   transferQueueId?: number;
@@ -52,6 +53,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     greetingMessage,
     complationMessage,
     outOfHoursMessage,
+    audioPermission,
     queueIds,
     token,
     //timeSendQueue,
@@ -74,6 +76,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     greetingMessage,
     complationMessage,
     outOfHoursMessage,
+    audioPermission,
     queueIds,
     companyId,
     token,

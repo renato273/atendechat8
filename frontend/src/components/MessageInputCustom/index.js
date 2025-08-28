@@ -18,6 +18,7 @@ import SendIcon from "@material-ui/icons/Send";
 import CancelIcon from "@material-ui/icons/Cancel";
 import ClearIcon from "@material-ui/icons/Clear";
 import MicIcon from "@material-ui/icons/Mic";
+import Tooltip from "@material-ui/core/Tooltip";
 import CheckCircleOutlineIcon from "@material-ui/icons/CheckCircleOutline";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
 import { FormControlLabel, Switch } from "@material-ui/core";
@@ -258,6 +259,8 @@ const ActionButtons = (props) => {
     handleCancelAudio,
     handleUploadAudio,
     handleStartRecording,
+    canSendAudio,
+    effectiveSource,
   } = props;
   const classes = useStyles();
   if (inputMessage) {
@@ -302,15 +305,24 @@ const ActionButtons = (props) => {
       </div>
     );
   } else {
+    const tooltipText = canSendAudio
+      ? (effectiveSource === "connection"
+          ? (i18n.t("messagesInput.audio.allowedByConnection") || "Audio habilitado por conexión")
+          : (i18n.t("messagesInput.audio.allowedGlobal") || "Audio habilitado (global)"))
+      : (i18n.t("messagesInput.audio.blocked") || "Audio restringido");
     return (
-      <IconButton
-        aria-label="showRecorder"
-        component="span"
-        disabled={loading || ticketStatus !== "open"}
-        onClick={handleStartRecording}
-      >
-        <MicIcon className={classes.sendMessageIcons} />
-      </IconButton>
+      <Tooltip title={tooltipText}>
+        <span>
+          <IconButton
+            aria-label="showRecorder"
+            component="span"
+            disabled={loading || ticketStatus !== "open"}
+            onClick={handleStartRecording}
+          >
+            <MicIcon style={{ color: canSendAudio ? "#4caf50" : "#f44336" }} className={classes.sendMessageIcons} />
+          </IconButton>
+        </span>
+      </Tooltip>
     );
   }
 };
@@ -472,12 +484,44 @@ const MessageInputCustom = (props) => {
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [canSendAudio, setCanSendAudio] = useState(true);
+  const [effectiveSource, setEffectiveSource] = useState("global");
   const inputRef = useRef();
   const { setReplyingMessage, replyingMessage } =
     useContext(ReplyMessageContext);
   const { user } = useContext(AuthContext);
 
   const [signMessage, setSignMessage] = useLocalStorage("signOption", true);
+
+  // Cargar permiso efectivo (global vs conexión) para audio
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: settings } = await api.get("/settings");
+        const globalSetting = Array.isArray(settings)
+          ? settings.find((s) => s.key === "userAudioRestriction")
+          : null;
+        let effective = globalSetting?.value !== "disabled";
+        let source = "global";
+
+        // Obtener ticket para ver la conexión y su audioPermission
+        const { data: ticket } = await api.get(`/tickets/${ticketId}`);
+        const connPerm = ticket?.whatsapp?.audioPermission || "inherit";
+        if (connPerm === "enabled") {
+          effective = true;
+          source = "connection";
+        } else if (connPerm === "disabled") {
+          effective = false;
+          source = "connection";
+        }
+
+        setCanSendAudio(effective);
+        setEffectiveSource(source);
+      } catch (err) {
+        // ignorar
+      }
+    })();
+  }, [ticketId]);
 
   useEffect(() => {
     inputRef.current.focus();
@@ -607,6 +651,10 @@ const MessageInputCustom = (props) => {
   };
 
   const handleStartRecording = async () => {
+    if (!canSendAudio) {
+      toastError({ error: { message: i18n.t("messagesInput.audio.notAllowed") || "Audio restringido" } });
+      return;
+    }
     setLoading(true);
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -763,6 +811,8 @@ const MessageInputCustom = (props) => {
             handleCancelAudio={handleCancelAudio}
             handleUploadAudio={handleUploadAudio}
             handleStartRecording={handleStartRecording}
+            canSendAudio={canSendAudio}
+            effectiveSource={effectiveSource}
           />
         </div>
       </Paper>

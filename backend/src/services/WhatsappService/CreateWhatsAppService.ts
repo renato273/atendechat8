@@ -18,6 +18,7 @@ interface Request {
   isDefault?: boolean;
   token?: string;
   provider?: string;
+  audioPermission?: string; // 'inherit' | 'enabled' | 'disabled'
   //sendIdQueue?: number;
   //timeSendQueue?: number;
   transferQueueId?: number;
@@ -47,6 +48,7 @@ const CreateWhatsAppService = async ({
   companyId,
   token = "",
   provider = "beta",
+  audioPermission = "inherit",
   //timeSendQueue,
   //sendIdQueue,
   transferQueueId,
@@ -160,6 +162,7 @@ const CreateWhatsAppService = async ({
       companyId,
       token,
       provider,
+      audioPermission,
       //timeSendQueue,
       //sendIdQueue,
 	    transferQueueId,

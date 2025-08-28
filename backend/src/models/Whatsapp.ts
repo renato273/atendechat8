@@ -119,6 +119,11 @@ class Whatsapp extends Model<Whatsapp> {
   @Column
   timeToTransfer: number;
 
+  // Audio permission per connection: 'inherit' | 'enabled' | 'disabled'
+  @Default("inherit")
+  @Column(DataType.STRING)
+  audioPermission: string;
+
   @ForeignKey(() => Prompt)
   @Column
   promptId: number;

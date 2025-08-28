@@ -73,8 +73,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   SetTicketMessagesAsRead(ticket);
 
   if (medias) {
-    // 🔥 NUEVA VALIDACIÓN: Verificar restricción de audio para usuarios
-    await validateAudioRestriction(medias, profile, companyId);
+    // 🔥 NUEVA VALIDACIÓN: Verificar restricción de audio (global + conexión)
+    await validateAudioRestriction(medias, profile, companyId, ticket.whatsappId);
 
     await Promise.all(
       medias.map(async (media: Express.Multer.File, index) => {
@@ -222,7 +222,8 @@ const updateSentMessagesAsOpened = async (ticket: Ticket): Promise<void> => {
 const validateAudioRestriction = async (
   medias: Express.Multer.File[],
   userProfile: string,
-  companyId: number
+  companyId: number,
+  whatsappId?: number
 ): Promise<void> => {
   // Los admins siempre pueden enviar audio
   if (userProfile === "admin") {
@@ -239,16 +240,24 @@ const validateAudioRestriction = async (
   );
 
   if (hasAudio) {
-    // Verificar configuración de la empresa
+    // 1) Global company setting
     const audioSetting = await Setting.findOne({
-      where: {
-        key: "userAudioRestriction",
-        companyId: companyId
-      }
+      where: { key: "userAudioRestriction", companyId }
     });
 
-    // Si la configuración existe y está deshabilitada, bloquear
-    if (audioSetting && audioSetting.value === "disabled") {
+    let effectivePermission: "enabled" | "disabled" =
+      audioSetting?.value === "disabled" ? "disabled" : "enabled";
+
+    // 2) Connection override if provided
+    if (whatsappId) {
+      const whatsapp = await Whatsapp.findByPk(whatsappId);
+      if (whatsapp) {
+        if (whatsapp.audioPermission === "enabled") effectivePermission = "enabled";
+        if (whatsapp.audioPermission === "disabled") effectivePermission = "disabled";
+      }
+    }
+
+    if (effectivePermission === "disabled") {
       throw new AppError("ERR_AUDIO_NOT_ALLOWED", 403);
     }
   }
