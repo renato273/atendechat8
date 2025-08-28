@@ -2419,6 +2419,17 @@ const handleMessage = async (
       groupContact
     );
 
+    console.log("🎯 [TICKET] Ticket creado/encontrado:", {
+      ticketId: ticket.id,
+      hasQueue: !!ticket.queue,
+      isGroup: ticket.isGroup,
+      fromMe: msg.key.fromMe,
+      hasUserId: !!ticket.userId,
+      queuesLength: whatsapp.queues.length,
+      useIntegration: ticket.useIntegration,
+      status: ticket.status
+    });
+
     await provider(ticket, msg, companyId, contact, wbot as WASocket);
 
     // voltar para o menu inicial
@@ -2779,6 +2790,7 @@ const handleMessage = async (
       whatsapp.queues.length >= 1 &&
       !ticket.useIntegration
     ) {
+      console.log("🎯 [CONDITION] Condición verifyQueue CUMPLIDA");
       console.log("🎯 [HANDLE_MESSAGE] Llamando a verifyQueue:", {
         hasQueue: !!ticket.queue,
         isGroup: ticket.isGroup,
@@ -2795,6 +2807,15 @@ const handleMessage = async (
           chatbotAt: moment().toDate()
         });
       }
+    } else {
+      console.log("❌ [CONDITION] Condición verifyQueue NO cumplida:", {
+        hasQueue: !!ticket.queue,
+        isGroup: ticket.isGroup,
+        fromMe: msg.key.fromMe,
+        hasUserId: !!ticket.userId,
+        queuesLength: whatsapp.queues.length,
+        useIntegration: ticket.useIntegration
+      });
     }
 
     const isFirstMsg = await Ticket.findOne({
