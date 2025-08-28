@@ -46,6 +46,7 @@ const useStyles = makeStyles(theme => ({
     height: 'calc(100% - 56px)',
     objectFit: 'cover',
     borderRadius: `${theme.spacing(1)}px ${theme.spacing(1)}px 0 0`,
+    backgroundColor: '#f5f5f5',
   },
   videoTitle: {
     marginTop: theme.spacing(1),
@@ -70,6 +71,14 @@ const useStyles = makeStyles(theme => ({
     borderRadius: theme.spacing(1),
     overflow: 'hidden',
   },
+  errorMessage: {
+    color: theme.palette.error.main,
+    textAlign: 'center',
+    padding: theme.spacing(2),
+  },
+  retryButton: {
+    marginTop: theme.spacing(1),
+  },
 }));
 
 const Helps = () => {
@@ -77,6 +86,7 @@ const Helps = () => {
   const [records, setRecords] = useState([]);
   const { list } = useHelps();
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -89,10 +99,12 @@ const Helps = () => {
 
   const openVideoModal = (video) => {
     setSelectedVideo(video);
+    setVideoError(false); // Reset error state
   };
 
   const closeVideoModal = () => {
     setSelectedVideo(null);
+    setVideoError(false);
   };
 
   const handleModalClose = useCallback((event) => {
@@ -108,7 +120,79 @@ const Helps = () => {
     };
   }, [handleModalClose]);
 
+  // Función mejorada para manejo de errores en thumbnails
+  const handleThumbnailError = (event, videoId) => {
+    console.log(`Error cargando thumbnail para video: ${videoId}`);
+    // Fallback a thumbnail de menor calidad
+    event.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  };
+
+  // Función mejorada para obtener thumbnails de YouTube
+  const getThumbnailUrl = (videoId) => {
+    if (!videoId) return '';
+    
+    // Intentar con la mejor calidad disponible
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  };
+
+  // Función para validar ID de video de YouTube
+  const isValidYouTubeId = (videoId) => {
+    if (!videoId) return false;
+    // Los IDs de YouTube tienen 11 caracteres alfanuméricos
+    return /^[a-zA-Z0-9_-]{11}$/.test(videoId);
+  };
+
+  // Función para extraer ID de video de diferentes formatos de URL
+  const extractYouTubeId = (videoUrl) => {
+    if (!videoUrl) return null;
+    
+    // Si ya es solo el ID
+    if (isValidYouTubeId(videoUrl)) {
+      return videoUrl;
+    }
+    
+    // Patrones para diferentes formatos de URL de YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = videoUrl.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  };
+
   const renderVideoModal = () => {
+    if (!selectedVideo) return null;
+
+    const videoId = extractYouTubeId(selectedVideo);
+    
+    if (!videoId || !isValidYouTubeId(videoId)) {
+      return (
+        <Modal
+          open={Boolean(selectedVideo)}
+          onClose={closeVideoModal}
+          className={classes.videoModal}
+        >
+          <div className={classes.videoModalContent}>
+            <div className={classes.errorMessage}>
+              <Typography variant="h6" color="error">
+                ID de video inválido
+              </Typography>
+              <Typography variant="body2">
+                El ID del video no es válido. Verifique que sea un ID de YouTube correcto.
+              </Typography>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
     return (
       <Modal
         open={Boolean(selectedVideo)}
@@ -116,16 +200,17 @@ const Helps = () => {
         className={classes.videoModal}
       >
         <div className={classes.videoModalContent}>
-          {selectedVideo && (
-            <iframe
-              style={{ width: "100%", height: "100%", position: "absolute", top: 0, left: 0 }}
-              src={`https://www.youtube.com/embed/${selectedVideo}`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          )}
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=1`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+            onError={() => setVideoError(true)}
+          />
         </div>
       </Modal>
     );
@@ -135,21 +220,54 @@ const Helps = () => {
     return (
       <>
         <div className={`${classes.mainPaper} ${classes.mainPaperContainer}`}>
-          {records.length ? records.map((record, key) => (
-            <Paper key={key} className={`${classes.helpPaper} ${classes.paperHover}`} onClick={() => openVideoModal(record.video)}>
-              <img
-                src={`https://img.youtube.com/vi/${record.video}/mqdefault.jpg`}
-                alt="Thumbnail"
-                className={classes.videoThumbnail}
-              />
-              <Typography variant="button" className={classes.videoTitle}>
-                {record.title}
-              </Typography>
-              <Typography variant="caption" className={classes.videoDescription}>
-                {record.description}
-              </Typography>
-            </Paper>
-          )) : null}
+          {records.length ? records.map((record, key) => {
+            const videoId = extractYouTubeId(record.video);
+            const isValidVideo = isValidYouTubeId(videoId);
+            
+            return (
+              <Paper 
+                key={key} 
+                className={`${classes.helpPaper} ${classes.paperHover}`} 
+                onClick={() => openVideoModal(record.video)}
+              >
+                {isValidVideo ? (
+                  <img
+                    src={getThumbnailUrl(videoId)}
+                    alt={`Thumbnail de ${record.title}`}
+                    className={classes.videoThumbnail}
+                    onError={(e) => handleThumbnailError(e, videoId)}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div 
+                    className={classes.videoThumbnail}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f0f0f0',
+                      color: '#666'
+                    }}
+                  >
+                    <Typography variant="body2">
+                      Video no disponible
+                    </Typography>
+                  </div>
+                )}
+                <Typography variant="button" className={classes.videoTitle}>
+                  {record.title}
+                </Typography>
+                <Typography variant="caption" className={classes.videoDescription}>
+                  {record.description}
+                </Typography>
+                {!isValidVideo && (
+                  <Typography variant="caption" color="error">
+                    ID de video inválido: {record.video}
+                  </Typography>
+                )}
+              </Paper>
+            );
+          }) : null}
         </div>
       </>
     );
