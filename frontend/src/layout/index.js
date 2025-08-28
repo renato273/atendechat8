@@ -406,11 +406,11 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             {/* {greaterThenSm && user?.profile === "admin" && getDateAndDifDays(user?.company?.dueDate).difData < 7 ? ( */}
             {greaterThenSm && user?.profile === "admin" && user?.company?.dueDate ? (
               <>
-                {i18n.t("mainDrawer.appBar.greeting.hello")} <b>{user.name}</b>, {i18n.t("mainDrawer.appBar.greeting.welcome")} <b>{user?.company?.name}</b>! ({i18n.t("mainDrawer.appBar.greeting.active")} {dateToClient(user?.company?.dueDate)})
+                {i18n.t("mainDrawer.appBar.greeting.hello")} <b>{user?.name || 'Usuario'}</b>, {i18n.t("mainDrawer.appBar.greeting.welcome")} <b>{user?.company?.name || 'Empresa'}</b>! ({i18n.t("mainDrawer.appBar.greeting.active")} {dateToClient(user?.company?.dueDate)})
               </>
             ) : (
               <>
-                {i18n.t("mainDrawer.appBar.greeting.hello")} <b>{user.name}</b>, {i18n.t("mainDrawer.appBar.greeting.welcome")} <b>{user?.company?.name}</b>!
+                {i18n.t("mainDrawer.appBar.greeting.hello")} <b>{user?.name || 'Usuario'}</b>, {i18n.t("mainDrawer.appBar.greeting.welcome")} <b>{user?.company?.name || 'Empresa'}</b>!
               </>
             )}
           </Typography>
@@ -464,7 +464,7 @@ const LoggedInLayout = ({ children, themeToggle }) => {
             <CachedIcon style={{ color: "white" }} />
           </IconButton>
 
-          {user.id && <NotificationsPopOver volume={volume} />}
+          {user?.id && <NotificationsPopOver volume={volume} />}
 
           <AnnouncementsPopover />
 

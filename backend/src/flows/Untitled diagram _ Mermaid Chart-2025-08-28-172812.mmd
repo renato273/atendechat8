@@ -1,0 +1,40 @@
+graph TD
+    A[Contacto envía mensaje] --> B{¿Ticket existe?}
+    B -->|Sí| C{¿Status = closed?}
+    B -->|No| D[Crear nuevo ticket]
+    C -->|Sí| E[Reabrir ticket]
+    C -->|No| F[Procesar mensaje normal]
+    E --> G[Status = pending]
+    G --> H[Limpiar cola y usuario]
+    D --> H
+    H --> I{¿Cuántas colas disponibles?}
+    I -->|1 cola| J[Asignar automáticamente]
+    I -->|Múltiples colas| K[Mostrar menú de opciones]
+    K --> L{¿Usuario eligió cola?}
+    L -->|Sí| M[Asignar a cola elegida]
+    L -->|No| N[Quedar en cola general]
+    J --> O[Enviar mensaje de bienvenida]
+    M --> P[Activar chatbot si está configurado]
+    N --> Q[Esperar nueva interacción]
+    F --> R[Procesar en cola actual]
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#fff3e0
+    style D fill:#e8f5e8
+    style E fill:#fff8e1
+    style F fill:#f3e5f5
+    style G fill:#fff8e1
+    style H fill:#e8f5e8
+    style I fill:#fff3e0
+    style J fill:#e8f5e8
+    style K fill:#fff3e0
+    style L fill:#fff3e0
+    style M fill:#e8f5e8
+    style N fill:#ffebee
+    style O fill:#e8f5e8
+    style P fill:#e8f5e8
+    style Q fill:#ffebee
+    style R fill:#f3e5f5
+
+
