@@ -15,30 +15,30 @@ module.exports = {
                             createdAt: new Date(),
                             updatedAt: new Date()
                         },
-						{
-						  key: "sendGreetingAccepted",
-						  value: "disabled",
-						  companyId: 1,
-						  createdAt: new Date(),
-						  updatedAt: new Date(),
-						  
-						},
-						{
-						  key: "sendMsgTransfTicket",
-						  value: "disabled",
-						  companyId: 1,
-						  createdAt: new Date(),
-						  updatedAt: new Date(),
-						  
-						},	
-						{
-						  key: "sendGreetingMessageOneQueues",
-						  value: "disabled",
-						  companyId: 1,
-						  createdAt: new Date(),
-						  updatedAt: new Date(),
-						  
-						},						
+                        {
+                            key: "sendGreetingAccepted",
+                            value: "disabled",
+                            companyId: 1,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+
+                        },
+                        {
+                            key: "sendMsgTransfTicket",
+                            value: "disabled",
+                            companyId: 1,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+
+                        },
+                        {
+                            key: "sendGreetingMessageOneQueues",
+                            value: "disabled",
+                            companyId: 1,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+
+                        },
                         {
                             key: "userRating",
                             value: "disabled",
@@ -61,7 +61,7 @@ module.exports = {
                             updatedAt: new Date()
                         },
                         {
-                            key:"call",
+                            key: "call",
                             value: "disabled",
                             companyId: 1,
                             createdAt: new Date(),
@@ -105,6 +105,20 @@ module.exports = {
                         {
                             key: "asaas",
                             value: "",
+                            companyId: 1,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        },
+                        {
+                            key: "userAudioRestriction",
+                            value: "enabled",
+                            companyId: 1,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        },
+                        {
+                            key: "userCreation",
+                            value: "enabled",
                             companyId: 1,
                             createdAt: new Date(),
                             updatedAt: new Date()

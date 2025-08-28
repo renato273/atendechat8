@@ -8,6 +8,7 @@ import Queue from "../models/Queue";
 import User from "../models/User";
 import Whatsapp from "../models/Whatsapp";
 import Ticket from "../models/Ticket";
+import Setting from "../models/Setting";
 import formatBody from "../helpers/Mustache";
 
 import ListMessagesService from "../services/MessageServices/ListMessagesService";
@@ -65,13 +66,16 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const { ticketId } = req.params;
   const { body, quotedMsg }: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
-  const { companyId } = req.user;
+  const { companyId, profile } = req.user;
 
   const ticket = await ShowTicketService(ticketId, companyId);
 
   SetTicketMessagesAsRead(ticket);
 
   if (medias) {
+    // 🔥 NUEVA VALIDACIÓN: Verificar restricción de audio para usuarios
+    await validateAudioRestriction(medias, profile, companyId);
+
     await Promise.all(
       medias.map(async (media: Express.Multer.File, index) => {
         await SendWhatsAppMedia({ media, ticket, body: Array.isArray(body) ? body[index] : body });
@@ -211,6 +215,42 @@ const updateSentMessagesAsOpened = async (ticket: Ticket): Promise<void> => {
     }
   } catch (err) {
     console.error("Error actualizando mensajes como abiertos:", err);
+  }
+};
+
+// 🔥 NUEVA FUNCIÓN: Validar restricción de audio para usuarios
+const validateAudioRestriction = async (
+  medias: Express.Multer.File[],
+  userProfile: string,
+  companyId: number
+): Promise<void> => {
+  // Los admins siempre pueden enviar audio
+  if (userProfile === "admin") {
+    return;
+  }
+
+  // Verificar si hay archivos de audio
+  const hasAudio = medias.some(media => 
+    media.mimetype.startsWith("audio/") || 
+    media.originalname.toLowerCase().includes(".mp3") ||
+    media.originalname.toLowerCase().includes(".ogg") ||
+    media.originalname.toLowerCase().includes(".wav") ||
+    media.originalname.toLowerCase().includes(".m4a")
+  );
+
+  if (hasAudio) {
+    // Verificar configuración de la empresa
+    const audioSetting = await Setting.findOne({
+      where: {
+        key: "userAudioRestriction",
+        companyId: companyId
+      }
+    });
+
+    // Si la configuración existe y está deshabilitada, bloquear
+    if (audioSetting && audioSetting.value === "disabled") {
+      throw new AppError("ERR_AUDIO_NOT_ALLOWED", 403);
+    }
   }
 };
 

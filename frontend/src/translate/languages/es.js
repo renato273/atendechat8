@@ -1603,6 +1603,7 @@ const messages = {
         ERR_FETCH_WAPP_MSG: "Error al buscar el mensaje en WhatsApp, tal vez sea muy antiguo.",
         ERR_QUEUE_COLOR_ALREADY_EXISTS: "Este color ya está en uso, elija otro.",
         ERR_WAPP_GREETING_REQUIRED: "El mensaje de saludo es obligatorio cuando hay más de una cola.",
+        ERR_AUDIO_NOT_ALLOWED: "No tienes permisos para enviar archivos de audio.",
       },
     },
     languages: {
