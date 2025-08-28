@@ -1082,11 +1082,27 @@ const verifyQueue = async (
   contact: Contact,
   mediaSent?: Message | undefined
 ) => {
+  console.log("🚀 [VERIFY_QUEUE] Función iniciada con:", {
+    fromMe: msg.key.fromMe,
+    isGroup: ticket.isGroup,
+    ticketId: ticket.id,
+    contactNumber: contact.number
+  });
 
   const companyId = ticket.companyId;
 
   const { queues, greetingMessage, maxUseBotQueues, timeUseBotQueues } =
     await ShowWhatsAppService(wbot.id!, ticket.companyId);
+    
+  console.log("📋 [VERIFY_QUEUE] Colas obtenidas:", {
+    totalQueues: queues.length,
+    queues: queues.map(q => ({
+      id: q.id,
+      name: q.name,
+      integrationId: q.integrationId,
+      promptId: q.promptId
+    }))
+  });
 
   if (queues.length === 1) {
     const sendGreetingMessageOneQueues = await Setting.findOne({
@@ -1163,6 +1179,16 @@ const verifyQueue = async (
 
   const selectedOption = getBodyMessage(msg);
   const choosenQueue = queues[+selectedOption - 1];
+  
+  console.log("🎯 [VERIFY_QUEUE] Opción seleccionada:", {
+    selectedOption: selectedOption,
+    choosenQueue: choosenQueue ? {
+      id: choosenQueue.id,
+      name: choosenQueue.name,
+      integrationId: choosenQueue.integrationId,
+      hasIntegration: !!choosenQueue.integrationId
+    } : null
+  });
 
   const buttonActive = await Setting.findOne({
     where: {
@@ -1251,10 +1277,22 @@ const verifyQueue = async (
 
       //inicia integração dialogflow/n8n
       if (!msg.key.fromMe && !ticket.isGroup && choosenQueue.integrationId) {
+        console.log("🎯 [QUEUE] Cola tiene integración:", {
+          queueId: choosenQueue.id,
+          queueName: choosenQueue.name,
+          integrationId: choosenQueue.integrationId
+        });
+        
         const integrations = await ShowQueueIntegrationService(
           choosenQueue.integrationId,
           companyId
         );
+        
+        console.log("🔍 [QUEUE] Integración encontrada:", {
+          integrationId: integrations.id,
+          type: integrations.type,
+          url: integrations.urlN8N
+        });
 
         await handleMessageIntegration(
           msg,
@@ -1269,6 +1307,13 @@ const verifyQueue = async (
           integrationId: integrations.id
         });
         // return;
+      } else {
+        console.log("ℹ️ [QUEUE] No se activó integración:", {
+          fromMe: msg.key.fromMe,
+          isGroup: ticket.isGroup,
+          hasIntegrationId: !!choosenQueue.integrationId,
+          integrationId: choosenQueue.integrationId
+        });
       }
 
       //inicia integração openai
@@ -2116,8 +2161,17 @@ export const handleMessageIntegration = async (
   isFirstMsg: Ticket | null = null,
 ): Promise<void> => {
   const msgType = getTypeMessage(msg);
+  
+  console.log("🔗 [INTEGRATION] Iniciando integración:", {
+    type: queueIntegration.type,
+    integrationId: queueIntegration.id,
+    ticketId: ticket.id,
+    companyId: companyId
+  });
 
   if (queueIntegration.type === "n8n" || queueIntegration.type === "webhook") {
+    console.log("🌐 [WEBHOOK] Procesando webhook/n8n:", queueIntegration.urlN8N);
+    
     if (queueIntegration?.urlN8N) {
       const options = {
         method: "POST",
@@ -2125,27 +2179,50 @@ export const handleMessageIntegration = async (
         headers: {
           "Content-Type": "application/json"
         },
-        json: msg
+        json: {
+          message: msg,
+          ticket: {
+            id: ticket.id,
+            status: ticket.status,
+            queueId: ticket.queueId,
+            contactId: ticket.contactId
+          },
+          contact: contact ? {
+            number: contact.number,
+            name: contact.name
+          } : null,
+          companyId: companyId
+        }
       };
+      
+      console.log("📤 [WEBHOOK] Enviando POST a:", queueIntegration.urlN8N);
+      console.log("📤 [WEBHOOK] Datos enviados:", JSON.stringify(options.json, null, 2));
+      
       try {
         request(options, function (error, response) {
           if (error) {
+            console.error("❌ [WEBHOOK] Error en request:", error);
             throw new Error(error);
           } else {
-            console.log(response.body);
+            console.log("✅ [WEBHOOK] Respuesta exitosa:", {
+              statusCode: response.statusCode,
+              body: response.body
+            });
           }
         });
       } catch (error) {
+        console.error("❌ [WEBHOOK] Error capturado:", error);
         throw new Error(error);
       }
+    } else {
+      console.log("⚠️ [WEBHOOK] No hay URL configurada para la integración");
     }
   } else if (queueIntegration.type === "typebot") {
-    console.log("entrou no typebot");
-    // await typebots(ticket, msg, wbot, queueIntegration);
+    console.log("🤖 [TYPEBOT] Iniciando typebot");
     await typebotListener({ ticket, msg, wbot, typebot: queueIntegration });
   } else if (queueIntegration.type === "flowbuilder") {
+    console.log("🔄 [FLOWBUILDER] Iniciando flowbuilder");
     if (!isMenu) {
-
       await flowbuilderIntegration(
         msg,
         wbot,
@@ -2156,7 +2233,6 @@ export const handleMessageIntegration = async (
         isFirstMsg
       );
     } else {
-
       if (
         !isNaN(parseInt(ticket.lastMessage)) &&
         ticket.status !== "open" &&
@@ -2174,6 +2250,8 @@ export const handleMessageIntegration = async (
       }
     }
   }
+  
+  console.log("✅ [INTEGRATION] Integración completada");
 };
 
 const flowBuilderQueue = async (
@@ -2241,6 +2319,13 @@ const handleMessage = async (
   companyId: number
 ): Promise<void> => {
   let mediaSent: Message | undefined;
+
+  console.log("🚀 [HANDLE_MESSAGE] Mensaje recibido:", {
+    fromMe: msg.key.fromMe,
+    isGroup: msg.key.remoteJid?.endsWith("@g.us"),
+    messageType: getTypeMessage(msg),
+    body: getBodyMessage(msg)
+  });
 
   if (!isValidMsg(msg)) return;
 
@@ -2694,6 +2779,15 @@ const handleMessage = async (
       whatsapp.queues.length >= 1 &&
       !ticket.useIntegration
     ) {
+      console.log("🎯 [HANDLE_MESSAGE] Llamando a verifyQueue:", {
+        hasQueue: !!ticket.queue,
+        isGroup: ticket.isGroup,
+        fromMe: msg.key.fromMe,
+        hasUserId: !!ticket.userId,
+        queuesLength: whatsapp.queues.length,
+        useIntegration: ticket.useIntegration
+      });
+      
       await verifyQueue(wbot, msg, ticket, contact);
 
       if (ticketTraking && ticketTraking.chatbotAt === null) {
