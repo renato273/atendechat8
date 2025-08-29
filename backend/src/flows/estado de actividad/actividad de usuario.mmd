@@ -1,0 +1,26 @@
+flowchart TD
+    A[👤 Usuario abre aplicación] --> B[🔌 Socket.IO conecta]
+    B --> C[✅ user.online = true]
+    C --> D[💾 Guardar en BD]
+    
+    D --> E[⏰ Iniciar heartbeat]
+    E --> F[📡 Emitir userStatus cada 5 min]
+    
+    F --> G{¿Usuario activo?}
+    G -->|SÍ| H[✅ Mantener online]
+    G -->|NO| I[❌ Marcar offline]
+    
+    H --> J[🔄 Continuar heartbeat]
+    I --> K[💾 Actualizar BD: online = false]
+    
+    L[🕐 Backend verifica cada 5 seg] --> M{¿updatedAt > 5 min?}
+    M -->|SÍ| N[✅ Usuario activo]
+    M -->|NO| O[❌ Timeout automático]
+    
+    O --> P[💾 online = false]
+    P --> Q[🔔 Notificar cambio de estado]
+    
+    style A fill:#e1f5fe
+    style C fill:#c8e6c9
+    style I fill:#ffcdd2
+    style O fill:#ffcdd2
