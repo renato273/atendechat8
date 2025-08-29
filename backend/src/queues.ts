@@ -31,6 +31,7 @@ import { ClosedAllOpenTickets } from "./services/WbotServices/wbotClosedTickets"
 import FindOrCreateTicketService from "./services/TicketServices/FindOrCreateTicketService";
 import CreateMessageService from "./services/MessageServices/CreateMessageService";
 import TicketTag from "./models/TicketTag";
+import Tag from "./models/Tag";
 
 
 const nodemailer = require('nodemailer');
@@ -757,13 +758,13 @@ async function handleDispatchCampaign(job) {
 
     let body = campaignShipping.message;
 
-    // 🏷️ CORREGIDO: Buscar ticket por número de contacto
+    // 🏷️ SEGURO: Buscar ticket y etiqueta respetando empresa
     if (campaign.tagId) {
       try {
-        // Buscar el ticket existente por número de contacto
+        // 1. ✅ Buscar el ticket existente por número de contacto (RESPETA empresa)
         const ticket = await Ticket.findOne({
           where: {
-            companyId: campaign.companyId
+            companyId: campaign.companyId  // ← SOLO tickets de esta empresa
           },
           include: [{ 
             model: Contact, 
@@ -773,26 +774,39 @@ async function handleDispatchCampaign(job) {
         });
 
         if (ticket) {
-          // Verificar si ya existe la relación para evitar duplicados
-          const existingTag = await TicketTag.findOne({
+          // 2. ✅ Verificar que la etiqueta pertenezca a la misma empresa
+          const tag = await Tag.findOne({
             where: {
-              ticketId: ticket.id,
-              tagId: campaign.tagId
+              id: campaign.tagId,
+              companyId: campaign.companyId  // ← SOLO etiquetas de esta empresa
             }
           });
 
-          if (!existingTag) {
-            await TicketTag.create({
-              ticketId: ticket.id,
-              tagId: campaign.tagId
+          if (tag) {
+            // 3. ✅ Verificar si ya existe la relación para evitar duplicados
+            const existingTag = await TicketTag.findOne({
+              where: {
+                ticketId: ticket.id,
+                tagId: campaign.tagId
+              }
             });
 
-            logger.info(`[🏷️] Etiqueta ${campaign.tagId} añadida al ticket ${ticket.id} (Campaña: ${campaign.name})`);
+            if (!existingTag) {
+              // 4. ✅ Crear la relación (ya verificamos que ambos son de la misma empresa)
+              await TicketTag.create({
+                ticketId: ticket.id,
+                tagId: campaign.tagId
+              });
+
+              logger.info(`[🏷️] Etiqueta "${tag.name}" (ID: ${tag.id}) añadida al ticket ${ticket.id} (Campaña: ${campaign.name}) - Empresa: ${campaign.companyId}`);
+            } else {
+              logger.info(`[🏷️] Etiqueta "${tag.name}" ya existía en el ticket ${ticket.id} (Campaña: ${campaign.name}) - Empresa: ${campaign.companyId}`);
+            }
           } else {
-            logger.info(`[🏷️] Etiqueta ${campaign.tagId} ya existía en el ticket ${ticket.id} (Campaña: ${campaign.name})`);
+            logger.warn(`[⚠️] Etiqueta ${campaign.tagId} no encontrada o no pertenece a la empresa ${campaign.companyId} (Campaña: ${campaign.name})`);
           }
         } else {
-          logger.warn(`[⚠️] No se encontró ticket para el número ${campaignShipping.number} (Campaña: ${campaign.name})`);
+          logger.warn(`[⚠️] No se encontró ticket para el número ${campaignShipping.number} en la empresa ${campaign.companyId} (Campaña: ${campaign.name})`);
         }
       } catch (error) {
         logger.error(`[❌] Error al añadir etiqueta al ticket:`, error);
