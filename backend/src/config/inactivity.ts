@@ -1,16 +1,13 @@
 export const inactivityConfig = {
-  // Tiempo en minutos para mostrar advertencia de inactividad
-  warningTimeoutMinutes: parseInt(process.env.USER_WARNING_TIMEOUT_MINUTES || '5'),
-  
-  // Tiempo en minutos para cerrar sesión por inactividad
+  // Tiempo en minutos para marcar usuario como offline en el dashboard
   offlineTimeoutMinutes: parseInt(process.env.USER_OFFLINE_TIMEOUT_MINUTES || '10'),
   
   // Frecuencia de verificación en segundos
   checkIntervalSeconds: 30,
   
-  // Mensajes personalizables
+  // Mensajes para logs
   messages: {
-    warning: 'Advertencia: Tu sesión se cerrará en {remaining} minutos por inactividad',
-    logout: 'Sesión cerrada por inactividad ({timeout} minutos)'
+    userOffline: 'Usuario marcado como offline por inactividad ({timeout} minutos)',
+    userOnline: 'Usuario marcado como online por actividad reciente'
   }
 };

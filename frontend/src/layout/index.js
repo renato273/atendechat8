@@ -36,7 +36,7 @@ import { SocketContext } from "../context/Socket/SocketContext";
 import ChatPopover from "../pages/Chat/ChatPopover";
 
 import { useDate } from "../hooks/useDate";
-import useInactivityMonitor from "../hooks/useInactivityMonitor";
+import useActivityMonitor from "../hooks/useActivityMonitor";
 
 import ColorModeContext from "../layout/themeContext";
 import Brightness4Icon from '@material-ui/icons/Brightness4';
@@ -196,14 +196,11 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
 
   const { dateToClient } = useDate();
-
-  // 🎯 Hook para monitoreo de inactividad
-  useInactivityMonitor();
+  useActivityMonitor(); // 🎯 Hook para monitoreo de actividad y estado online/offline
 
   // Languages
   const [anchorElLanguage, setAnchorElLanguage] = useState(null);
   const [menuLanguageOpen, setMenuLanguageOpen] = useState(false);
-
 
   //################### CODIGOS DE TESTE #########################################
   // useEffect(() => {

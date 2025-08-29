@@ -879,60 +879,53 @@ async function handleDispatchCampaign(job) {
 }
 
 async function handleLoginStatus(job) {
-  // 🎯 SISTEMA UNIFICADO: Maneja tanto estado online/offline como logout por inactividad
-  // 🚨 SISTEMA DE DOBLE TIMEOUT: Advertencia a los 5 min, logout a los 10 min
+  // 🎯 SISTEMA SEPARADO: Solo maneja estado online/offline para el dashboard
+  // 🚨 NO emite eventos de inactividad (eso lo maneja el frontend)
 
-  // 1. Usuarios que necesitan advertencia (5 minutos)
-  const usersNeedingWarning: { id: number }[] = await sequelize.query(
-    `select id from "Users" where "updatedAt" < now() - '${inactivityConfig.warningTimeoutMinutes} minutes'::interval and "updatedAt" >= now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = true`,
-    { type: QueryTypes.SELECT }
-  );
+  try {
+    // Usuarios que necesitan ser marcados como offline (10 minutos)
+    const usersNeedingOffline: { id: number }[] = await sequelize.query(
+      `select id from "Users" where "updatedAt" < now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = true`,
+      { type: QueryTypes.SELECT }
+    );
 
-  // 2. Usuarios que necesitan logout (10 minutos)
-  const usersNeedingLogout: { id: number }[] = await sequelize.query(
-    `select id from "Users" where "updatedAt" < now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = true`,
-    { type: QueryTypes.SELECT }
-  );
+    // Procesar usuarios offline
+    for (let item of usersNeedingOffline) {
+      try {
+        const user = await User.findByPk(item.id);
 
-  // Procesar advertencias
-  for (let item of usersNeedingWarning) {
-    try {
-      const user = await User.findByPk(item.id);
-      
-              // Solo emitir advertencia, no cambiar estado aún
-        if (global.io) {
-          global.io.to(`user-${user.id}`).emit('inactivityWarning', {
-            message: `Advertencia: Tu sesión se cerrará en ${inactivityConfig.offlineTimeoutMinutes - inactivityConfig.warningTimeoutMinutes} minutos por inactividad`,
-            remainingMinutes: inactivityConfig.offlineTimeoutMinutes - inactivityConfig.warningTimeoutMinutes
-          });
-        }
+        // Solo marcar como offline para el dashboard
+        await user.update({ online: false });
 
-      logger.info(`Usuario ${item.id} recibió advertencia de inactividad`);
-    } catch (e: any) {
-      Sentry.captureException(e);
-    }
-  }
-
-  // Procesar logouts
-  for (let item of usersNeedingLogout) {
-    try {
-      const user = await User.findByPk(item.id);
-
-      // 1. Marca como offline (para el dashboard)
-      await user.update({ online: false });
-
-      // 2. Emite evento para cerrar sesión en el frontend
-      if (global.io) {
-        global.io.to(`user-${user.id}`).emit('forceLogout', {
-          reason: 'inactivity',
-          message: `Sesión cerrada por inactividad (${inactivityConfig.offlineTimeoutMinutes} minutos)`
-        });
+        logger.info(`Usuario ${item.id} marcado como offline por inactividad (${inactivityConfig.offlineTimeoutMinutes} minutos)`);
+      } catch (e: any) {
+        Sentry.captureException(e);
       }
-
-      logger.info(`Usuario ${item.id} marcado como offline y sesión cerrada por inactividad`);
-    } catch (e: any) {
-      Sentry.captureException(e);
     }
+
+    // Usuarios que necesitan ser marcados como online (si han tenido actividad reciente)
+    const usersNeedingOnline: { id: number }[] = await sequelize.query(
+      `select id from "Users" where "updatedAt" >= now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = false`,
+      { type: QueryTypes.SELECT }
+    );
+
+    // Procesar usuarios online
+    for (let item of usersNeedingOnline) {
+      try {
+        const user = await User.findByPk(item.id);
+
+        // Marcar como online para el dashboard
+        await user.update({ online: true });
+
+        logger.info(`Usuario ${item.id} marcado como online por actividad reciente`);
+      } catch (e: any) {
+        Sentry.captureException(e);
+      }
+    }
+
+  } catch (e: any) {
+    Sentry.captureException(e);
+    logger.error("Error en handleLoginStatus:", e.message);
   }
 }
 
