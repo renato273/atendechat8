@@ -397,7 +397,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <ListIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listagem" />
+                      <ListItemText primary="Lista" />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/contact-lists")}
@@ -406,7 +406,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <PeopleIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listas de Contatos" />
+                      <ListItemText primary="Listas de Contactos" />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/campaigns-config")}
@@ -451,7 +451,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <EventAvailableIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Campanha" />
+                      <ListItemText primary="Campaña" />
                     </ListItem>
 
                     <ListItem
@@ -461,7 +461,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <ShapeLine />
                       </ListItemIcon>
-                      <ListItemText primary="Conversa" />
+                      <ListItemText primary="Conversación" />
                     </ListItem>
                   </List>
                 </Collapse>
