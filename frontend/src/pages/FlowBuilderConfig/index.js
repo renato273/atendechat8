@@ -144,7 +144,7 @@ const initialNodes = [
   {
     id: "1",
     position: { x: 250, y: 100 },
-    data: { label: "Inicio do fluxo" },
+    data: { label: "Inicio de flujo" },
     type: "start",
   },
 ];
@@ -191,7 +191,7 @@ const FlowBuilderConfig = () => {
           {
             id: "1",
             position: { x: posX, y: posY },
-            data: { label: "Inicio do fluxo" },
+            data: { label: "Inicio de flujo" },
             type: "start",
           },
         ];
@@ -566,7 +566,7 @@ const FlowBuilderConfig = () => {
           }}
         />
       ),
-      name: "Conteúdo",
+      name: "Contenido",
       type: "content",
     },
     {

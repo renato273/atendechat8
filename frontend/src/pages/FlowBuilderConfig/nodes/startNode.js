@@ -32,11 +32,11 @@ export default memo(({ data, isConnectable }) => {
           }}
         />
         <div style={{ color: "#232323", fontSize: "16px" }}>
-          Inicio do fluxo
+          Inicio de flujo
         </div>
       </div>
       <div style={{ color: "#727272", fontSize: "12px" }}>
-        Este bloco marca o inicio do seu fluxo!
+        Este bloque marca el inicio do su flujo!
       </div>
       <Handle
         type="source"

@@ -1028,7 +1028,7 @@ const FlowBuilderSingleBlockModal = ({
               ...data,
               data: mountData,
             });
-            toast.success("Conteúdo adicionada com sucesso!");
+            toast.success("Contenido agregado con éxito!");
             handleClose();
             setLoading(false);
 
@@ -1055,7 +1055,7 @@ const FlowBuilderSingleBlockModal = ({
               ...data,
               data: mountData,
             });
-            toast.success("Conteúdo adicionada com sucesso!");
+            toast.success("Contenido agregado con éxito!");
             await handleClose();
             setLoading(false);
           })
@@ -1103,7 +1103,7 @@ const FlowBuilderSingleBlockModal = ({
             onSave({
               ...mountData,
             });
-            toast.success("Conteúdo adicionada com sucesso!");
+            toast.success("Contenido agregado con éxito!");
             handleClose();
             setLoading(false);
 
@@ -1127,7 +1127,7 @@ const FlowBuilderSingleBlockModal = ({
             onSave({
               ...mountData,
             });
-            toast.success("Conteúdo adicionada com sucesso!");
+            toast.success("Contenido agregado con éxito!");
             handleClose();
             setLoading(false);
           })

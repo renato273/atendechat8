@@ -95,7 +95,7 @@ export default memo(({ data, isConnectable, id }) => {
             color: "#EC5858"
           }}
         />
-        <div style={{ color: "#232323", fontSize: "16px" }}>Conteúdo</div>
+        <div style={{ color: "#232323", fontSize: "16px" }}>Contenido</div>
       </div>
       <div style={{ color: "#232323", fontSize: "12px", width: 180 }}>
         {data.seq.map(item => (
