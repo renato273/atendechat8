@@ -32,6 +32,7 @@ import FindOrCreateTicketService from "./services/TicketServices/FindOrCreateTic
 import CreateMessageService from "./services/MessageServices/CreateMessageService";
 import TicketTag from "./models/TicketTag";
 import Tag from "./models/Tag";
+import { inactivityConfig } from "./config/inactivity";
 
 
 const nodemailer = require('nodemailer');
@@ -878,16 +879,57 @@ async function handleDispatchCampaign(job) {
 }
 
 async function handleLoginStatus(job) {
-  const offlineTimeoutMinutes = process.env.USER_OFFLINE_TIMEOUT_MINUTES || '5';
-  const users: { id: number }[] = await sequelize.query(
-    `select id from "Users" where "updatedAt" < now() - '${offlineTimeoutMinutes} minutes'::interval and online = true`,
+  // 🎯 SISTEMA UNIFICADO: Maneja tanto estado online/offline como logout por inactividad
+  // 🚨 SISTEMA DE DOBLE TIMEOUT: Advertencia a los 5 min, logout a los 10 min
+
+  // 1. Usuarios que necesitan advertencia (5 minutos)
+  const usersNeedingWarning: { id: number }[] = await sequelize.query(
+    `select id from "Users" where "updatedAt" < now() - '${inactivityConfig.warningTimeoutMinutes} minutes'::interval and "updatedAt" >= now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = true`,
     { type: QueryTypes.SELECT }
   );
-  for (let item of users) {
+
+  // 2. Usuarios que necesitan logout (10 minutos)
+  const usersNeedingLogout: { id: number }[] = await sequelize.query(
+    `select id from "Users" where "updatedAt" < now() - '${inactivityConfig.offlineTimeoutMinutes} minutes'::interval and online = true`,
+    { type: QueryTypes.SELECT }
+  );
+
+  // Procesar advertencias
+  for (let item of usersNeedingWarning) {
     try {
       const user = await User.findByPk(item.id);
+      
+              // Solo emitir advertencia, no cambiar estado aún
+        if (global.io) {
+          global.io.to(`user-${user.id}`).emit('inactivityWarning', {
+            message: `Advertencia: Tu sesión se cerrará en ${inactivityConfig.offlineTimeoutMinutes - inactivityConfig.warningTimeoutMinutes} minutos por inactividad`,
+            remainingMinutes: inactivityConfig.offlineTimeoutMinutes - inactivityConfig.warningTimeoutMinutes
+          });
+        }
+
+      logger.info(`Usuario ${item.id} recibió advertencia de inactividad`);
+    } catch (e: any) {
+      Sentry.captureException(e);
+    }
+  }
+
+  // Procesar logouts
+  for (let item of usersNeedingLogout) {
+    try {
+      const user = await User.findByPk(item.id);
+
+      // 1. Marca como offline (para el dashboard)
       await user.update({ online: false });
-      logger.info(`Usuario cambiado a offline: ${item.id}`);
+
+      // 2. Emite evento para cerrar sesión en el frontend
+      if (global.io) {
+        global.io.to(`user-${user.id}`).emit('forceLogout', {
+          reason: 'inactivity',
+          message: `Sesión cerrada por inactividad (${inactivityConfig.offlineTimeoutMinutes} minutos)`
+        });
+      }
+
+      logger.info(`Usuario ${item.id} marcado como offline y sesión cerrada por inactividad`);
     } catch (e: any) {
       Sentry.captureException(e);
     }
@@ -1064,7 +1106,7 @@ export async function startQueueProcess() {
     "VerifyLoginStatus",
     {},
     {
-      repeat: { cron: "*/5 * * * *", key: "verify-login" },  // ← De 1min a 5min
+      repeat: { cron: "*/30 * * * * *", key: "verify-login" },  // ← De 5min a 30seg para inactividad
       removeOnComplete: true
     }
   );

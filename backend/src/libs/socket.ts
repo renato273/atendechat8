@@ -164,6 +164,23 @@ export const initIO = (httpServer: Server): SocketIO => {
       }
     });
     
+    // 🎯 Listener para actividad del usuario (sistema de inactividad)
+    socket.on("userActivity", async (data) => {
+      try {
+        const { userId } = data;
+        if (userId && userId === user.id) {
+          // Actualizar updatedAt del usuario para resetear el timer de inactividad
+          await User.update(
+            { updatedAt: new Date() },
+            { where: { id: userId } }
+          );
+          logger.debug(`Usuario ${userId} actualizó actividad`);
+        }
+      } catch (error) {
+        logger.error(`Error actualizando actividad del usuario ${userId}:`, error);
+      }
+    });
+
     socket.emit("ready");
   });
   return io;
@@ -174,4 +191,9 @@ export const getIO = (): SocketIO => {
     throw new AppError("Socket IO not initialized");
   }
   return io;
+};
+
+// 🎯 Hacer io disponible globalmente para el sistema unificado de inactividad
+export const setGlobalIO = (): void => {
+  (global as any).io = io;
 };

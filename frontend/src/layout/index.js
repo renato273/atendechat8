@@ -31,12 +31,12 @@ import DarkMode from "../components/DarkMode";
 import { i18n } from "../translate/i18n";
 import toastError from "../errors/toastError";
 import AnnouncementsPopover from "../components/AnnouncementsPopover";
-
 import logo from "../assets/logo.png";
 import { SocketContext } from "../context/Socket/SocketContext";
 import ChatPopover from "../pages/Chat/ChatPopover";
 
 import { useDate } from "../hooks/useDate";
+import useInactivityMonitor from "../hooks/useInactivityMonitor";
 
 import ColorModeContext from "../layout/themeContext";
 import Brightness4Icon from '@material-ui/icons/Brightness4';
@@ -197,6 +197,9 @@ const LoggedInLayout = ({ children, themeToggle }) => {
 
   const { dateToClient } = useDate();
 
+  // 🎯 Hook para monitoreo de inactividad
+  useInactivityMonitor();
+
   // Languages
   const [anchorElLanguage, setAnchorElLanguage] = useState(null);
   const [menuLanguageOpen, setMenuLanguageOpen] = useState(false);
@@ -250,6 +253,8 @@ const LoggedInLayout = ({ children, themeToggle }) => {
   //##############################################################################
 
   const socketManager = useContext(SocketContext);
+  
+
 
   useEffect(() => {
     if (document.body.offsetWidth > 1200) {
@@ -278,6 +283,17 @@ const LoggedInLayout = ({ children, themeToggle }) => {
           localStorage.clear();
           window.location.reload();
         }, 1000);
+      }
+    });
+
+    // 🎯 Listener para logout forzado por inactividad
+    socket.on('forceLogout', (data) => {
+      if (data.reason === 'inactivity') {
+        toastError(`Sesión cerrada por inactividad: ${data.message}`);
+        setTimeout(() => {
+          localStorage.clear();
+          window.location.reload();
+        }, 2000);
       }
     });
 

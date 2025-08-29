@@ -1,6 +1,6 @@
 import gracefulShutdown from "http-graceful-shutdown";
 import app from "./app";
-import { initIO } from "./libs/socket";
+import { initIO, setGlobalIO } from "./libs/socket";
 import { logger } from "./utils/logger";
 import { StartAllWhatsAppsSessions } from "./services/WbotServices/StartAllWhatsAppsSessions";
 import Company from "./models/Company";
@@ -37,4 +37,5 @@ cron.schedule("* * * * *", async () => {
 });
 
 initIO(server);
+setGlobalIO(); // 🎯 Hacer io disponible globalmente para el sistema unificado
 gracefulShutdown(server);
