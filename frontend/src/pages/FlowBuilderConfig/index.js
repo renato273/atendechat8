@@ -5,7 +5,7 @@ import React, {
   useContext,
   useCallback,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { i18n } from "../../translate/i18n";
 import { SiOpenai } from "react-icons/si";
 import typebotIcon from "../../assets/typebot-ico.png";
 import { HiOutlinePuzzle } from "react-icons/hi";
@@ -152,7 +152,6 @@ const initialNodes = [
 const initialEdges = [];
 
 const FlowBuilderConfig = () => {
-  const { t } = useTranslation();
   const classes = useStyles();
   const history = useHistory();
   const { id } = useParams();
@@ -842,9 +841,9 @@ const FlowBuilderConfig = () => {
         close={setModalAddQuestion}
       />
 
-      <MainHeader>
-        <Title>{t("flowBuilder.title")}</Title>
-      </MainHeader>
+              <MainHeader>
+          <Title>{i18n.t("flowBuilder.title")}</Title>
+        </MainHeader>
       {!loading && (
         <Paper
           className={classes.mainPaper}
@@ -886,20 +885,20 @@ const FlowBuilderConfig = () => {
             }}
           >
             <Typography
-              style={{ color: "#010101", textShadow: "#010101 1px 0 10px" }}
-            >
-              {t("flowBuilder.saveReminder")}
-            </Typography>
+                              style={{ color: "#010101", textShadow: "#010101 1px 0 10px" }}
+              >
+                {i18n.t("flowBuilder.saveReminder")}
+              </Typography>
           </Stack>
           <Stack direction={"row"} justifyContent={"end"}>
             <Button
               sx={{ textTransform: "none" }}
               variant="contained"
               color="primary"
-              onClick={() => saveFlow()}
-            >
-              {t("flowBuilder.buttons.save")}
-            </Button>
+                              onClick={() => saveFlow()}
+              >
+                {i18n.t("flowBuilder.buttons.save")}
+              </Button>
           </Stack>
 
           <Stack
