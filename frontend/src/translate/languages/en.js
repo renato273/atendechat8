@@ -934,6 +934,7 @@ const messages = {
 					media: "File",
 					token: "Registered Token",
 				},
+				mediaFile: "Media file",
 				toasts: {
 					unauthorized: "This company doesn't have permission to access this page! We are redirecting you.",
 					success: "Message sent successfully!",
@@ -1605,6 +1606,7 @@ const messages = {
 				ERR_FETCH_WAPP_MSG: "Error fetching WhatsApp message, it might be too old.",
 				ERR_QUEUE_COLOR_ALREADY_EXISTS: "This color is already in use, choose another.",
 				ERR_WAPP_GREETING_REQUIRED: "Greeting message is required when there is more than one queue.",
+				ERR_NO_WHATSAPP_CONFIGURED: "No WhatsApp number has been configured for this company",
 			},
 		}
 	},

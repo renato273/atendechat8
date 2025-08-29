@@ -955,6 +955,7 @@ const messages = {
           media: "Arquivo",
           token: "Token cadastrado",
         },
+        mediaFile: "Arquivo de mídia",
         toasts: {
           unauthorized:
               "Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.",
@@ -1646,6 +1647,8 @@ const messages = {
             "Esta cor já está em uso, escolha outra.",
         ERR_WAPP_GREETING_REQUIRED:
             "A mensagem de saudação é obrigatório quando há mais de uma fila.",
+        ERR_NO_WHATSAPP_CONFIGURED:
+            "Nenhum número de Whatsapp foi configurado para essa empresa",
       },
     },
   },

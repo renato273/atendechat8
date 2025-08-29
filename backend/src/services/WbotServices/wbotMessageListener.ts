@@ -20,6 +20,7 @@ import {
 import Contact from "../../models/Contact";
 import Ticket from "../../models/Ticket";
 import Message from "../../models/Message";
+import Company from "../../models/Company";
 
 import { getIO } from "../../libs/socket";
 import CreateMessageService from "../MessageServices/CreateMessageService";
@@ -69,10 +70,16 @@ import { WebhookModel } from "../../models/Webhook";
 
 import { differenceInMilliseconds } from "date-fns";
 import Whatsapp from "../../models/Whatsapp";
+import { getTranslation } from "../../utils/translations";
 
 const request = require("request");
 
 const fs = require("fs");
+
+// Función para traducir "Arquivo de mídia" según el idioma de la empresa
+const getMediaFileTranslation = (language: string): string => {
+  return getTranslation('MEDIA_FILE', language);
+};
 
 type Session = WASocket & {
   id?: number;
@@ -879,6 +886,10 @@ export const verifyMediaMessage = async (
   const io = getIO();
   const quotedMsg = await verifyQuotedMessage(msg);
   const media = await downloadMedia(msg);
+  
+  // Obtener el idioma de la empresa para la traducción
+  const company = await Company.findByPk(ticket.companyId);
+  const language = company?.language || 'pt';
 
   if (!media) {
     throw new Error("ERR_WAPP_DOWNLOAD_MEDIA");
@@ -922,7 +933,7 @@ export const verifyMediaMessage = async (
   };
 
   await ticket.update({
-    lastMessage: body || "Arquivo de mídia"
+    lastMessage: body || getMediaFileTranslation(language)
   });
 
   const newMessage = await CreateMessageService({

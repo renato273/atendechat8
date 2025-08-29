@@ -1,10 +1,13 @@
 import AppError from "../errors/AppError";
 import Whatsapp from "../models/Whatsapp";
 import GetDefaultWhatsAppByUser from "./GetDefaultWhatsAppByUser";
+import { getTranslation } from "../utils/translations";
+import GetCompanyLanguage from "./GetCompanyLanguage";
 
 const GetDefaultWhatsApp = async (
   companyId: number,
-  userId?: number
+  userId?: number,
+  language?: string
 ): Promise<Whatsapp> => {
   let connection: Whatsapp;
 
@@ -34,7 +37,9 @@ const GetDefaultWhatsApp = async (
   }
 
   if (!connection) {
-    throw new AppError(`Nenhum número de Whatsapp foi configurado para essa empresa`);
+    // Si no se proporciona idioma, obtenerlo de la empresa
+    const companyLanguage = language || await GetCompanyLanguage(companyId);
+    throw new AppError(getTranslation('ERR_NO_WHATSAPP_CONFIGURED', companyLanguage));
   }
 
   return connection;
