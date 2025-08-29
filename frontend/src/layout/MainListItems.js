@@ -297,7 +297,7 @@ const MainListItems = (props) => {
 	{showKanban && (  
 	  <ListItemLink
         to="/kanban"
-        primary={`Kanban`}
+        primary={i18n.t("mainDrawer.listItems.kanban")}
         icon={<TableChartIcon />}
       />
 	  )}
@@ -397,7 +397,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <ListIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Lista" />
+                      <ListItemText primary={i18n.t("mainDrawer.listItems.campaignList")} />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/contact-lists")}
@@ -406,7 +406,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <PeopleIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listas de Contactos" />
+                      <ListItemText primary={i18n.t("mainDrawer.listItems.contactLists")} />
                     </ListItem>
                     <ListItem
                       onClick={() => history.push("/campaigns-config")}
@@ -415,7 +415,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <SettingsOutlinedIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Conf. Campañas" />
+                      <ListItemText primary={i18n.t("mainDrawer.listItems.campaignConfig")} />
                     </ListItem>
                   </List>
                 </Collapse>
@@ -451,7 +451,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <EventAvailableIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Campaña" />
+                      <ListItemText primary={i18n.t("mainDrawer.listItems.flowCampaign")} />
                     </ListItem>
 
                     <ListItem
@@ -461,7 +461,7 @@ const MainListItems = (props) => {
                       <ListItemIcon>
                         <ShapeLine />
                       </ListItemIcon>
-                      <ListItemText primary="Conversación" />
+                      <ListItemText primary={i18n.t("mainDrawer.listItems.flowConversation")} />
                     </ListItem>
                   </List>
                 </Collapse>

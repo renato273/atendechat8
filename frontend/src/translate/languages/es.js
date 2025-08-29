@@ -850,6 +850,13 @@ const messages = {
           files: "Lista de archivos",
           prompts: "Open.AI",
           queueIntegration: "Integraciones",
+          // 🆕 NUEVAS TRADUCCIONES
+          kanban: "Kanban",
+          campaignList: "Lista",
+          contactLists: "Listas de Contactos",
+          campaignConfig: "Conf. Campañas",
+          flowCampaign: "Campaña",
+          flowConversation: "Conversación",
         },
         appBar: {
           refresh: "Recargar página",
