@@ -75,7 +75,22 @@ export const sendScheduledMessages = new BullQueue(
   connection
 );
 
-export const campaignQueue = new BullQueue("CampaignQueue", connection);
+export const campaignQueue = new BullQueue("CampaignQueue", connection, {
+  // ⚡ CONFIGURACIÓN OPTIMIZADA - PREVENIR SOBRECARGA
+  limiter: {
+    max: 50,         // ← Máximo 50 trabajos simultáneos
+    duration: 60000  // ← Por minuto
+  },
+  defaultJobOptions: {
+    removeOnComplete: 100,  // ← Mantener solo últimos 100 completados
+    removeOnFail: 50,       // ← Mantener solo últimos 50 fallidos
+    attempts: 3,            // ← Reintentar máximo 3 veces
+    backoff: {
+      type: 'exponential',
+      delay: 2000
+    }
+  }
+});
 
 async function handleSendMessage(job) {
   try {
@@ -958,13 +973,14 @@ export async function startQueueProcess() {
   userMonitor.process("VerifyLoginStatus", handleLoginStatus);
 
 
-  campaignQueue.process("VerifyCampaigns", 1, handleVerifyCampaigns);
+  // 🚀 WORKERS OPTIMIZADOS - RESPETANDO DELAYS ANTI-SPAM
+  campaignQueue.process("VerifyCampaigns", 3, handleVerifyCampaigns);      // ← 3 workers para verificación
 
-  campaignQueue.process("ProcessCampaign", 1, handleProcessCampaign);
+  campaignQueue.process("ProcessCampaign", 3, handleProcessCampaign);      // ← 3 workers para procesamiento
 
-  campaignQueue.process("PrepareContact", 1, handlePrepareContact);
+  campaignQueue.process("PrepareContact", 5, handlePrepareContact);        // ← 5 workers para preparación
 
-  campaignQueue.process("DispatchCampaign", 1, handleDispatchCampaign);
+  campaignQueue.process("DispatchCampaign", 2, handleDispatchCampaign);    // ← 2 workers para envío (RESPETA DELAYS)
 
 
   //queueMonitor.process("VerifyQueueStatus", handleVerifyQueue);
@@ -992,9 +1008,18 @@ export async function startQueueProcess() {
 
     logger.info('[📌] - Estado de la cola de campañas:', {
       jobs: jobCounts,
+      workers: {
+        verifyCampaigns: 3,
+        processCampaign: 3,
+        prepareContact: 5,
+        dispatchCampaign: 2
+      },
       memory: {
         heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
         heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB'
+      },
+      performance: {
+        jobsPerMinute: jobCounts.completed || 0
       }
     });
   }, 5 * 60 * 1000);
@@ -1007,7 +1032,7 @@ export async function startQueueProcess() {
     "Verify",
     {},
     {
-      repeat: { cron: "*/5 * * * * *", key: "verify" },
+      repeat: { cron: "*/30 * * * * *", key: "verify" },  // ← De 5s a 30s
       removeOnComplete: true
     }
   );
@@ -1016,7 +1041,7 @@ export async function startQueueProcess() {
     "VerifyCampaigns",
     {},
     {
-      repeat: { cron: "*/20 * * * * *", key: "verify-campaing" },
+      repeat: { cron: "*/2 * * * *", key: "verify-campaing" },  // ← De 20s a 2min
       removeOnComplete: true
     }
   );
@@ -1025,7 +1050,7 @@ export async function startQueueProcess() {
     "VerifyLoginStatus",
     {},
     {
-      repeat: { cron: "* * * * *", key: "verify-login" },
+      repeat: { cron: "*/5 * * * *", key: "verify-login" },  // ← De 1min a 5min
       removeOnComplete: true
     }
   );
@@ -1034,7 +1059,7 @@ export async function startQueueProcess() {
     "VerifyQueueStatus",
     {},
     {
-      repeat: { cron: "*/20 * * * * *" },
+      repeat: { cron: "*/2 * * * *" },  // ← De 20s a 2min
       removeOnComplete: true
     }
   );
