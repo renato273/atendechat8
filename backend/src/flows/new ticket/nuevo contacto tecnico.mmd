@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant C as Cliente
+    participant W as WhatsApp
+    participant L as wbotMessageListener
+    participant V as verifyContact
+    participant G as GetProfilePicUrl
+    participant S as CreateOrUpdateContactService
+    participant T as FindOrCreateTicketService
+    participant M as CreateMessageService
+    participant DB as Base de Datos
+    participant F as Frontend
+    
+    C->>W: Envía mensaje
+    W->>L: messages.upsert
+    L->>V: verifyContact(msgContact)
+    
+    V->>G: GetProfilePicUrl(contactNumber)
+    G->>W: wbot.profilePictureUrl()
+    W->>G: URL de foto o error
+    G->>V: profilePicUrl
+    
+    V->>S: CreateOrUpdateContactService()
+    S->>DB: Contact.findOrCreate()
+    DB->>S: Contacto creado/actualizado
+    S->>V: Contact object
+    
+    V->>T: FindOrCreateTicketService()
+    T->>DB: Ticket.findOne() o create()
+    DB->>T: Ticket object
+    
+    T->>M: CreateMessageService()
+    M->>DB: Message.create()
+    DB->>M: Mensaje creado
+    
+    M->>F: Socket.IO: ticket created
+    M->>F: Socket.IO: message created
+    F->>F: Actualizar interfaz

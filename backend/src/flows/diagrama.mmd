@@ -1,0 +1,30 @@
+stateDiagram-v2
+    [*] --> Enviado: Cliente envía
+    Enviado --> Entregado: Sistema procesa
+    Entregado --> Leído: Agente abre ticket
+    Entregado --> Leído: Cliente activo
+    Leído --> LeídoPorTodos: En grupos
+    
+    state Enviado {
+        [*] --> ack1
+        ack1 : ack = 1
+        ack1 : ⏰ Reloj
+    }
+    
+    state Entregado {
+        [*] --> ack2
+        ack2 : ack = 2
+        ack2 : ✓ Una marca
+    }
+    
+    state Leído {
+        [*] --> ack3
+        ack3 : ack = 3
+        ack3 : ✓✓ Dos marcas
+    }
+    
+    state LeídoPorTodos {
+        [*] --> ack4
+        ack4 : ack = 4/5
+        ack4 : ✓✓ Azul
+    }

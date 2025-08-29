@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant C as Cliente
+    participant W as WhatsApp
+    participant S as Sistema
+    participant DB as Base de Datos
+    participant A as Agente
+    participant F as Frontend
+    
+    C->>W: Envía mensaje
+    W->>S: messages.upsert
+    S->>DB: Crear mensaje (ack = 1)
+    S->>DB: Actualizar ack = 2
+    
+    Note over A: Agente abre ticket
+    A->>S: GET /tickets/:id
+    S->>S: SetTicketMessagesAsRead()
+    S->>W: chatModify(markRead: true)
+    W->>C: Marca como leído en dispositivo
+    
+    S->>DB: UPDATE messages SET read = true
+    S->>DB: UPDATE messages SET ack = 3
+    S->>F: Socket.IO: updateUnread
+    
+    Note over C: Cliente está activo
+    W->>S: presence.update
+    S->>S: Detectar actividad (composing/available)
+    S->>S: updateSentMessagesAsReadByPresence()
+    S->>DB: UPDATE ack = 3 WHERE ack = 2
+    
+    S->>F: Socket.IO: appMessage update
+    F->>F: Actualizar iconos (✓✓)
+    
+    Note over S: Estado sincronizado
+    Note over W: Sistema ↔ WhatsApp

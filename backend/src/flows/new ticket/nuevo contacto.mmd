@@ -1,0 +1,60 @@
+flowchart TD
+    A[�� Cliente envía mensaje] --> B[📲 WhatsApp recibe]
+    B --> C[🔄 Sistema detecta mensaje]
+    
+    C --> D{¿Contacto existe?}
+    D -->|NO| E[🆕 Nuevo contacto detectado]
+    D -->|SÍ| F[�� Contacto existente]
+    
+    E --> G[🔍 Obtener foto de perfil]
+    G --> H[�� GetProfilePicUrl]
+    H --> I{¿Foto disponible?}
+    I -->|SÍ| J[💾 Guardar URL de foto]
+    I -->|NO| K[🖼️ Usar imagen por defecto]
+    
+    J --> L[📝 Crear contacto en BD]
+    K --> L
+    
+    L --> M[👤 CreateOrUpdateContactService]
+    M --> N[�� Contacto creado en BD]
+    
+    F --> O[📋 Buscar contacto existente]
+    O --> P[🔄 Actualizar datos si es necesario]
+    
+    N --> Q[🎫 Crear/Encontrar Ticket]
+    P --> Q
+    
+    Q --> R{¿Ticket existe?}
+    R -->|NO| S[�� Crear nuevo ticket]
+    R -->|SÍ| T[�� Ticket existente]
+    
+    S --> U[📝 Nuevo ticket: status = pending]
+    T --> V[🔄 Verificar estado del ticket]
+    
+    U --> W[📋 Ticket creado en BD]
+    V --> X{¿Status = closed?}
+    
+    W --> Y[🔔 Emitir evento: ticket creado]
+    X -->|SÍ| Z[🔄 Reabrir ticket]
+    X -->|NO| AA[📋 Mantener estado actual]
+    
+    Z --> BB[�� Status = pending]
+    BB --> CC[🧹 Limpiar queueId y userId]
+    
+    Y --> DD[📨 Crear mensaje en BD]
+    CC --> DD
+    
+    DD --> EE[💾 Mensaje guardado en BD]
+    EE --> FF[🔔 Emitir evento: mensaje creado]
+    
+    FF --> GG[�� Frontend se actualiza]
+    GG --> HH[��️ Ticket aparece en lista]
+    HH --> II[🔔 Notificación para agentes]
+    
+    style A fill:#e1f5fe
+    style E fill:#fff3e0
+    style S fill:#fff3e0
+    style U fill:#fff3e0
+    style Y fill:#c8e6c9
+    style FF fill:#c8e6c9
+    style GG fill:#e8f5e8

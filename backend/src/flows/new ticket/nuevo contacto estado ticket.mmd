@@ -1,0 +1,31 @@
+stateDiagram-v2
+    [*] --> MensajeRecibido: Cliente envía
+    
+    MensajeRecibido --> ContactoVerificado: verifyContact()
+    ContactoVerificado --> TicketCreado: FindOrCreateTicket()
+    
+    state TicketCreado {
+        [*] --> NuevoTicket
+        [*] --> TicketExistente
+        
+        NuevoTicket --> Pending: status = pending
+        TicketExistente --> Reabierto: status = closed
+        TicketExistente --> Mantenido: status = open/pending
+        
+        Reabierto --> Pending: status = pending
+        Mantenido --> [*]
+    }
+    
+    Pending --> [*]: Ticket listo para atención
+    
+    state ContactoVerificado {
+        [*] --> NuevoContacto
+        [*] --> ContactoExistente
+        
+        NuevoContacto --> FotoObtenida: GetProfilePicUrl()
+        ContactoExistente --> DatosActualizados: Actualizar si necesario
+        
+        FotoObtenida --> ContactoCreado: CreateContact()
+        DatosActualizados --> [*]
+        ContactoCreado --> [*]
+    }

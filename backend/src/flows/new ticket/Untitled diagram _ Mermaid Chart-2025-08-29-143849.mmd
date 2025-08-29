@@ -1,0 +1,26 @@
+flowchart LR
+    A["📨 Mensaje recibido"] --> B["🔔 Evento: messages.upsert"]
+    B --> C["✅ verifyContact"]
+    C --> D["👤 Contacto creado/actualizado"]
+    D --> E["🎫 Ticket creado/encontrado"]
+    E --> F["✅ Mensaje guardado"]
+    
+    F --> G["✅ Socket.IO Events"]
+    G --> H["🔔 company-{id}-contact"]
+    G --> I["🔔 company-{id}-ticket"]
+    G --> J["🔔 company-{id}-appMessage"]
+    
+    H --> K["📱 Frontend: Contactos"]
+    I --> L["📱 Frontend: Tickets"]
+    J --> M["✅ Frontend: Mensajes"]
+    
+    K --> N["👁️ UI actualizada"]
+    L --> N
+    M --> N
+    
+    N --> O["🔔 Notificaciones para agentes"]
+    
+    style A fill:#e1f5fe
+    style G fill:#fff3e0
+    style N fill:#c8e6c9
+    style O fill:#e8f5e8
