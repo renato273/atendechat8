@@ -61,7 +61,7 @@ import ReactFlow, {
   addEdge,
   onElementsRemove,
   useReactFlow,
-} from "react-flow-renderer";
+} from "reactflow";
 
 import FlowBuilderAddTextModal from "../../components/FlowBuilderAddTextModal";
 import FlowBuilderIntervalModal from "../../components/FlowBuilderIntervalModal";

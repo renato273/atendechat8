@@ -1,9 +1,8 @@
 import React, { useContext } from "react";
 import {
   getBezierPath,
-  getEdgeCenter,
   getMarkerEnd
-} from "react-flow-renderer";
+} from "reactflow";
 
 import "./css/buttonedge.css";
 import { Delete } from "@mui/icons-material";
@@ -11,6 +10,11 @@ import { Delete } from "@mui/icons-material";
 const onEdgeClick = (evt, id) => {
   evt.stopPropagation();
   //removeEdgeList(id);
+};
+
+// Función para calcular el centro del edge manualmente
+const calculateEdgeCenter = (sourceX, sourceY, targetX, targetY) => {
+  return [(sourceX + targetX) / 2, (sourceY + targetY) / 2];
 };
 
 export default function removeEdge({
@@ -35,12 +39,7 @@ export default function removeEdge({
     targetPosition
   });
   const markerEnd = getMarkerEnd(arrowHeadType, markerEndId);
-  const [edgeCenterX, edgeCenterY] = getEdgeCenter({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY
-  });
+  const [edgeCenterX, edgeCenterY] = calculateEdgeCenter(sourceX, sourceY, targetX, targetY);
 
   const foreignObjectSize = 40;
 

@@ -10,15 +10,16 @@ import Box from "@material-ui/core/Box";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
-import { versionSystem } from "../../../package.json";
+import packageJson from "../../../package.json";
 import { i18n } from "../../translate/i18n";
-import { nomeEmpresa } from "../../../package.json";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import logo from "../../assets/logo.png";
 import {LanguageOutlined} from "@material-ui/icons";
 import {IconButton, Menu, MenuItem} from "@material-ui/core";
 import LanguageControl from "../../components/LanguageControl";
 
+// Extraer las propiedades del package.json
+const { versionSystem, nomeEmpresa } = packageJson;
 
 const Copyright = () => {
 	return (
