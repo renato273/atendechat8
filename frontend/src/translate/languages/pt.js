@@ -1600,6 +1600,13 @@ const messages = {
           message: "Esta ação não pode ser revertida.",
         },
       },
+      flowBuilder: {
+        title: "Desenhe seu fluxo",
+        saveReminder: "Não se esqueça de salvar seu fluxo!",
+        buttons: {
+          save: "Salvar",
+        },
+      },
       backendErrors: {
         ERR_INTERNAL_SERVER_ERROR:
             "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde",

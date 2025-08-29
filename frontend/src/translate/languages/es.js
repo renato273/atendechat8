@@ -1590,6 +1590,13 @@ const messages = {
           message: "Esta acción no puede ser revertida.",
         },
       },
+      flowBuilder: {
+        title: "Diseña tu flujo",
+        saveReminder: "¡No olvides guardar tu flujo!",
+        buttons: {
+          save: "Guardar",
+        },
+      },
       backendErrors: {
         ERR_INTERNAL_SERVER_ERROR: "Ocurrió un error inesperado. Por favor, intente nuevamente más tarde",
         ERR_NO_OTHER_WHATSAPP: "Debe haber al menos un WhatsApp predeterminado.",

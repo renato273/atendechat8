@@ -5,6 +5,7 @@ import React, {
   useContext,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { SiOpenai } from "react-icons/si";
 import typebotIcon from "../../assets/typebot-ico.png";
 import { HiOutlinePuzzle } from "react-icons/hi";
@@ -151,6 +152,7 @@ const initialNodes = [
 const initialEdges = [];
 
 const FlowBuilderConfig = () => {
+  const { t } = useTranslation();
   const classes = useStyles();
   const history = useHistory();
   const { id } = useParams();
@@ -841,7 +843,7 @@ const FlowBuilderConfig = () => {
       />
 
       <MainHeader>
-        <Title>Desenhe seu fluxo</Title>
+        <Title>{t("flowBuilder.title")}</Title>
       </MainHeader>
       {!loading && (
         <Paper
@@ -886,7 +888,7 @@ const FlowBuilderConfig = () => {
             <Typography
               style={{ color: "#010101", textShadow: "#010101 1px 0 10px" }}
             >
-              Não se esqueça de salvar seu fluxo!
+              {t("flowBuilder.saveReminder")}
             </Typography>
           </Stack>
           <Stack direction={"row"} justifyContent={"end"}>
@@ -896,7 +898,7 @@ const FlowBuilderConfig = () => {
               color="primary"
               onClick={() => saveFlow()}
             >
-              Salvar
+              {t("flowBuilder.buttons.save")}
             </Button>
           </Stack>
 

@@ -1570,8 +1570,15 @@ const messages = {
 					title: "Delete message?",
 					message: "This action cannot be undone.",
 				},
-			},
-			backendErrors: {
+			      },
+      flowBuilder: {
+        title: "Design your flow",
+        saveReminder: "Don't forget to save your flow!",
+        buttons: {
+          save: "Save",
+        },
+      },
+      backendErrors: {
 				ERR_INTERNAL_SERVER_ERROR: "An unexpected error occurred. Please try again later",
 				ERR_NO_OTHER_WHATSAPP: "There must be at least one default WhatsApp.",
 				ERR_NO_DEF_WAPP_FOUND: "No default WhatsApp found. Check the connections page.",
