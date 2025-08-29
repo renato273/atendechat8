@@ -30,6 +30,7 @@ import formatBody from "./helpers/Mustache";
 import { ClosedAllOpenTickets } from "./services/WbotServices/wbotClosedTickets";
 import FindOrCreateTicketService from "./services/TicketServices/FindOrCreateTicketService";
 import CreateMessageService from "./services/MessageServices/CreateMessageService";
+import TicketTag from "./models/TicketTag";
 
 
 const nodemailer = require('nodemailer');
@@ -740,6 +741,49 @@ async function handleDispatchCampaign(job) {
     const chatId = `${campaignShipping.number}@s.whatsapp.net`;
 
     let body = campaignShipping.message;
+
+    // 🏷️ CORREGIDO: Buscar ticket por número de contacto
+    if (campaign.tagId) {
+      try {
+        // Buscar el ticket existente por número de contacto
+        const ticket = await Ticket.findOne({
+          where: {
+            companyId: campaign.companyId
+          },
+          include: [{ 
+            model: Contact, 
+            as: "contact",
+            where: { number: campaignShipping.number }
+          }]
+        });
+
+        if (ticket) {
+          // Verificar si ya existe la relación para evitar duplicados
+          const existingTag = await TicketTag.findOne({
+            where: {
+              ticketId: ticket.id,
+              tagId: campaign.tagId
+            }
+          });
+
+          if (!existingTag) {
+            await TicketTag.create({
+              ticketId: ticket.id,
+              tagId: campaign.tagId
+            });
+
+            logger.info(`[🏷️] Etiqueta ${campaign.tagId} añadida al ticket ${ticket.id} (Campaña: ${campaign.name})`);
+          } else {
+            logger.info(`[🏷️] Etiqueta ${campaign.tagId} ya existía en el ticket ${ticket.id} (Campaña: ${campaign.name})`);
+          }
+        } else {
+          logger.warn(`[⚠️] No se encontró ticket para el número ${campaignShipping.number} (Campaña: ${campaign.name})`);
+        }
+      } catch (error) {
+        logger.error(`[❌] Error al añadir etiqueta al ticket:`, error);
+        // Continuar con el envío aunque falle la asignación de etiqueta
+      }
+    }
 
     if (!isNil(campaign.fileListId)) {
 
